@@ -23,4 +23,10 @@ bin/
 
 # Local runtime state
 .pids.json
+*.pids
 *.log
+
+# Local compiled binaries accidentally created in service directories
+kutuk/kutuk
+sezi/main
+yuzey/yuzey

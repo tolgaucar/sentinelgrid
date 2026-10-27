@@ -262,7 +262,7 @@ This section is part of the project contract. The repository should not be prese
 - Service-to-service integration is partial. Several services expose APIs but are not wired into a complete end-to-end data path.
 - API schemas, event contracts, compatibility rules, authentication requirements, and error semantics are not centrally versioned.
 - Docker Compose contains a broad service inventory, but readiness, persistence, secrets, dependency ordering, and all health checks require further validation.
-- `Makefile` targets reference `simulasyon/baslatici.py`, which is not present in the current tree; the run/stop helper targets therefore need repair.
+- The simulator launcher exists, but its run/stop helper path and process-management behavior still need to be validated across platforms.
 - There is no CI workflow, release process, generated API documentation, migration system, or automated compatibility check.
 
 ### Data and algorithms
