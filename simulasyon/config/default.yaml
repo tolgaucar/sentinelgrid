@@ -1,0 +1,107 @@
+# ÖTÜKEN-MATRİS Simülasyon Platformu Varsayılan Yapılandırması
+
+platform:
+  name: "ÖTÜKEN-MATRİS Simülasyon"
+  version: "0.1.0"
+
+# Modül bağlantı bilgileri
+modules:
+  butun:
+    host: "http://127.0.0.1"
+    port: 8000
+    enabled: true
+  bag:
+    host: "http://127.0.0.1"
+    port: 9091   # BAĞ HTTP status portu
+    enabled: true
+  kutuk:
+    host: "http://127.0.0.1"
+    port: 9093   # KÜTÜK HTTP status portu
+    enabled: true
+  dirlik:
+    host: "http://127.0.0.1"
+    port: 9095   # DİRLİK HTTP status portu
+    enabled: true
+  bagdas:
+    host: "http://127.0.0.1"
+    port: 9097   # BAĞDAŞ HTTP portu
+    enabled: true
+  akim:
+    host: "http://127.0.0.1"
+    port: 9099   # AKIM HTTP portu
+    enabled: true
+  yurt:
+    host: "http://127.0.0.1"
+    port: 9101   # YURT HTTP portu
+    enabled: true
+  yuzey:
+    host: "http://127.0.0.1"
+    port: 9103   # YÜZEY HTTP portu
+    enabled: true
+  koz:
+    host: "http://127.0.0.1"
+    port: 9115   # KÖZ HTTP portu
+    enabled: true
+  im:
+    host: "http://127.0.0.1"
+    port: 9105   # İM HTTP portu
+    enabled: true
+  yayin:
+    host: "http://127.0.0.1"
+    port: 9107   # YAYIN HTTP portu
+    enabled: true
+  durak:
+    host: "http://127.0.0.1"
+    port: 9109   # DURAK HTTP portu
+    enabled: true
+  tutum:
+    host: "http://127.0.0.1"
+    port: 9111   # TUTUM HTTP portu
+    enabled: true
+  tani:
+    host: "http://127.0.0.1"
+    port: 9113   # TANI HTTP portu
+    enabled: true
+  sezi:
+    host: "http://127.0.0.1"
+    port: 9116   # SEZİ HTTP portu
+    enabled: true
+  yanki:
+    host: "http://127.0.0.1"
+    port: 9118   # YANKI HTTP portu
+    enabled: true
+  duyum:
+    host: "http://127.0.0.1"
+    port: 9120   # DUYUM HTTP portu
+    enabled: true
+  baskala:
+    host: "http://127.0.0.1"
+    port: 9122   # BAŞKALA HTTP portu
+    enabled: true
+  sozgec:
+    host: "http://127.0.0.1"
+    port: 9124   # SÖZGEÇ HTTP portu
+    enabled: true
+  izlek:
+    host: "http://127.0.0.1"
+    port: 9126   # İZLEK HTTP portu
+    enabled: true
+
+# Savaş alanı parametreleri
+battlefield:
+  # Merkez koordinat (varsayılan: Ankara civarı)
+  center_lat: 39.925
+  center_lon: 32.837
+  radius_km: 50.0
+  # Varlık sayıları
+  friendly_units: 20
+  enemy_units: 15
+  drones: 10
+  sensors: 30
+
+# Simülasyon parametreleri
+simulation:
+  tick_interval_ms: 500     # Her simülasyon adımı arası süre
+  max_ticks: 200            # Maksimum adım sayısı
+  realtime: true            # Gerçek zamanlı mı yoksa hızlandırılmış mı
+  log_level: "INFO"

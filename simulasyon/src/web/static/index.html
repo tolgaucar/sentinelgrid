@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<title>ÖTÜKEN-MATRİS Simülasyon</title>
+<style>
+:root {
+  --bg: #0a0e17;
+  --surface: #111827;
+  --surface2: #1a2332;
+  --border: #2a3a4e;
+  --text: #e2e8f0;
+  --dim: #64748b;
+  --accent: #3b82f6;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --cyan: #06b6d4;
+  --orange: #f97316;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header h1 {
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(90deg, var(--cyan), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.header .ws-status {
+  font-size: 11px;
+  display: flex; align-items: center; gap: 6px;
+}
+.ws-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red);
+  transition: background 0.3s;
+}
+.ws-dot.connected { background: var(--green); }
+
+/* Layout */
+.main {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  padding: 12px;
+  height: calc(100vh - 52px);
+}
+@media (max-width: 1000px) {
+  .main {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    height: auto;
+    min-height: calc(100vh - 52px);
+  }
+  .controls { grid-column: 1; }
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: auto;
+}
+.card.controls {
+  overflow: visible;
+}
+.card-header {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--dim);
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-body { padding: 12px 14px; }
+
+/* Control Panel */
+.controls { grid-column: 1 / -1; }
+.ctrl-row {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+}
+.ctrl-group {
+  display: flex; align-items: center; gap: 6px;
+}
+.ctrl-group label {
+  font-size: 11px; color: var(--dim); min-width: 50px;
+}
+input[type=number], select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 12px;
+  width: 80px;
+}
+select { width: 120px; }
+button {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-start {
+  background: var(--green);
+  color: #000;
+}
+.btn-start:hover { filter: brightness(1.15); }
+.btn-stop {
+  background: var(--red);
+  color: #fff;
+}
+.btn-stop:disabled, .btn-start:disabled {
+  opacity: 0.4; cursor: not-allowed;
+}
+
+/* Progress */
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--accent));
+  border-radius: 2px;
+  transition: width 0.3s;
+  width: 0%;
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stat-item {
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.stat-val {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.stat-val.green { color: var(--green); }
+.stat-val.red { color: var(--red); }
+.stat-val.cyan { color: var(--cyan); }
+.stat-val.yellow { color: var(--yellow); }
+
+/* Entity list */
+.entity-list {
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+  font-size: 11px;
+}
+.entity-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(42,58,78,0.4);
+}
+.faction-friendly { color: var(--cyan); }
+.faction-enemy { color: var(--red); }
+.faction-neutral { color: var(--dim); }
+
+/* Event log */
+.event-log {
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+  font-size: 11px;
+  display: flex;
+  flex-direction: column-reverse;
+}
+.event-item {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(42,58,78,0.3);
+  line-height: 1.4;
+}
+.event-item .ev-type {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-right: 4px;
+}
+.ev-sensor { background: #1e3a5f; color: var(--cyan); }
+.ev-c2 { background: #3b2f1a; color: var(--orange); }
+.ev-alert { background: #3b1a1a; color: var(--red); }
+.ev-damage { background: #3b3b1a; color: var(--yellow); }
+.ev-other { background: #1a2b1a; color: var(--green); }
+
+/* Battlefield canvas */
+.battlefield {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+#battleCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Modules */
+.module-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(42,58,78,0.4);
+}
+.module-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.module-dot.alive { background: var(--green); }
+.module-dot.dead { background: var(--red); }
+.module-name { font-size: 12px; font-weight: 600; }
+.module-url { font-size: 10px; color: var(--dim); }
+
+/* Results overlay */
+.results-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 100;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px;
+  overflow-y: auto;
+}
+.results-overlay.show { display: flex; }
+.results-box {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 0;
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+}
+.rpt-header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  padding: 20px 28px;
+  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid var(--border);
+}
+.rpt-header h2 { margin:0; font-size:18px; color: var(--cyan); }
+.rpt-header .rpt-subtitle { font-size:12px; color:var(--dim); margin-top:4px; }
+.rpt-body { padding: 20px 28px; }
+.rpt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.rpt-section {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.rpt-section.full { grid-column: 1 / -1; }
+.rpt-section-title {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--dim);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rpt-section-body { padding: 12px 14px; }
+.rpt-kv {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(42,58,78,0.3);
+  font-size: 12px;
+}
+.rpt-kv:last-child { border-bottom: none; }
+.rpt-kv .rk { color: var(--dim); }
+.rpt-kv .rv { font-weight: 600; text-align: right; }
+.rpt-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 11px;
+}
+.rpt-bar-label { width: 80px; color: var(--dim); text-align: right; }
+.rpt-bar-track {
+  flex: 1;
+  height: 14px;
+  background: rgba(42,58,78,0.4);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.rpt-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s;
+}
+.rpt-bar-val { width: 50px; font-weight: 600; font-size: 11px; }
+.rpt-mini-chart {
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+}
+.rpt-mini-bar {
+  flex: 1;
+  background: var(--accent);
+  border-radius: 1px 1px 0 0;
+  min-height: 1px;
+  opacity: 0.7;
+}
+.rpt-footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+}
+.results-close {
+  background: var(--accent);
+  color: #fff;
+  flex: 1;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🏴 ÖTÜKEN-MATRİS — Yazılım Tanımlı C4ISR Simülasyonu</h1>
+  <div class="ws-status">
+    <span style="font-size:9px;color:var(--dim);margin-right:8px">60 Modül • 8 Temel Sistem</span>
+    <div class="ws-dot" id="wsDot"></div>
+    <span id="wsLabel">Bağlanıyor…</span>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Top Control Bar -->
+  <div class="card controls">
+    <div class="card-body">
+      <div class="ctrl-row">
+        <div class="ctrl-group">
+          <label>Senaryo</label>
+          <select id="inScenario"><option value="temel">Temel Savaş Alanı</option></select>
+        </div>
+        <div class="ctrl-group">
+          <label>Tick</label>
+          <input type="number" id="inTicks" value="100" min="10" max="10000">
+        </div>
+        <div class="ctrl-group">
+          <label>Aralık</label>
+          <input type="number" id="inInterval" value="0.3" min="0.01" max="5" step="0.05">
+        </div>
+        <div class="ctrl-group">
+          <label>Dost</label>
+          <input type="number" id="inFriendly" value="20" min="1" max="200">
+        </div>
+        <div class="ctrl-group">
+          <label>Düşman</label>
+          <input type="number" id="inEnemy" value="15" min="1" max="200">
+        </div>
+        <div class="ctrl-group">
+          <label>Drone</label>
+          <input type="number" id="inDrones" value="10" min="0" max="100">
+        </div>
+        <div class="ctrl-group" style="display:flex;align-items:center;gap:6px">
+          <label for="inConnect" style="cursor:pointer;white-space:nowrap">🔗 Modüllere Bağlan</label>
+          <input type="checkbox" id="inConnect" checked style="width:16px;height:16px;cursor:pointer;accent-color:#22c55e">
+        </div>
+        <button class="btn-start" id="btnStart" onclick="startSim()">▶ BAŞLAT</button>
+        <button class="btn-stop" id="btnStop" onclick="stopSim()" disabled>■ DURDUR</button>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <!-- Left: Stats + Modules -->
+  <div style="display:flex; flex-direction:column; gap:12px;">
+    <div class="card">
+      <div class="card-header">📊 İstatistikler</div>
+      <div class="card-body">
+        <div class="stats-grid">
+          <div class="stat-item"><div class="stat-val cyan" id="statTick">0</div><div class="stat-label">Tick</div></div>
+          <div class="stat-item"><div class="stat-val green" id="statMsg">0</div><div class="stat-label">Mesaj</div></div>
+          <div class="stat-item"><div class="stat-val red" id="statErr">0</div><div class="stat-label">Hata</div></div>
+          <div class="stat-item"><div class="stat-val yellow" id="statEntities">0</div><div class="stat-label">Varlık</div></div>
+          <div class="stat-item"><div class="stat-val" id="statRate" style="color:var(--accent)">0</div><div class="stat-label">Mesaj/s</div></div>
+          <div class="stat-item"><div class="stat-val" id="statAlerts" style="color:var(--orange)">0</div><div class="stat-label">Alarm</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        🔌 Modüller
+        <button style="font-size:10px;padding:2px 8px;background:var(--surface2);color:var(--dim);border-radius:3px" onclick="checkModules()">Kontrol</button>
+      </div>
+      <div class="card-body" id="moduleList">
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🏛️ BÜTÜN</div><div class="module-url">:8000 — Orkestrasyon</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">📡 BAĞ</div><div class="module-url">:9091 — Mesaj Kuyruğu</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🗄️ KÜTÜK</div><div class="module-url">:9093 — Veritabanı</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🏥 DİRLİK</div><div class="module-url">:9095 — Sağlık İzleme</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🔄 BAĞDAŞ</div><div class="module-url">:9097 — Veri Dönüşüm</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🌊 AKIM</div><div class="module-url">:9099 — Ağ Yönlendirme</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🏕️ YURT</div><div class="module-url">:9101 — Uç Bilişim</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🗺️ YÜZEY</div><div class="module-url">:9103 — Taktik Harita</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🔐 İM</div><div class="module-url">:9105 — Dijital Kimlik</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">📡 YAYIN</div><div class="module-url">:9107 — Şifreli Yayım</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">⏸️ DURAK</div><div class="module-url">:9109 — Paket QoS</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🔋 TUTUM</div><div class="module-url">:9111 — Batarya İzleme</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🎯 TANI</div><div class="module-url">:9113 — Nesne Tespit</div></div></div>
+        <div class="module-row"><div class="module-dot dead"></div><div><div class="module-name">🔥 KÖZ</div><div class="module-url">:9115 — Termal Analiz</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        🔌 Cihazlar
+        <span id="deviceCount" style="font-size:10px;color:var(--dim)">0 cihaz</span>
+      </div>
+      <div class="card-body" id="deviceList" style="max-height:180px;overflow-y:auto">
+        <div style="font-size:10px;color:var(--dim);padding:8px">Simülasyon başlatıldığında cihazlar burada görünecek</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: Battlefield -->
+  <div class="card" style="display:flex;flex-direction:column;">
+    <div class="card-header">🗺️ Savaş Alanı<span id="canvasInfo" style="font-size:10px;color:var(--dim)"></span></div>
+    <div class="battlefield" style="flex:1;">
+      <canvas id="battleCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Right: Event Log -->
+  <div class="card" style="display:flex;flex-direction:column;">
+    <div class="card-header">📋 Olay Akışı <span id="eventCount" style="color:var(--accent)">0</span></div>
+    <div class="card-body event-log" id="eventLog" style="flex:1;"></div>
+  </div>
+</div>
+
+<!-- Results Overlay -->
+<div class="results-overlay" id="resultsOverlay">
+  <div class="results-box">
+    <div class="rpt-header">
+      <h2>📊 SİMÜLASYON RAPORU</h2>
+      <div class="rpt-subtitle" id="rptSubtitle"></div>
+    </div>
+    <div class="rpt-body">
+      <div class="rpt-grid" id="rptGrid"></div>
+    </div>
+    <div class="rpt-footer">
+      <button class="results-close" onclick="closeResults()">KAPAT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let ws = null;
+let startTime = 0;
+let totalMessages = 0;
+let totalAlerts = 0;
+let allEntities = [];
+let totalEventCount = 0;
+
+// ── WebSocket ──
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onopen = () => {
+    document.getElementById('wsDot').classList.add('connected');
+    document.getElementById('wsLabel').textContent = 'Bağlı';
+  };
+  ws.onclose = () => {
+    document.getElementById('wsDot').classList.remove('connected');
+    document.getElementById('wsLabel').textContent = 'Bağlantı kesildi';
+    setTimeout(connectWS, 2000);
+  };
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'tick') handleTick(data);
+    else if (data.type === 'finished') handleFinished(data);
+    else if (data.type === 'state') handleState(data);
+  };
+}
+
+function handleState(data) {
+  if (data.running) {
+    document.getElementById('btnStart').disabled = true;
+    document.getElementById('btnStop').disabled = false;
+    startTime = Date.now() / 1000;
+  }
+  updateStats(data.tick || 0, data.max_ticks || 0, data.stats || {});
+  if (data.devices && data.devices.summary) {
+    updateDevicePanel(data.devices.summary);
+  }
+}
+
+function handleTick(data) {
+  const { tick, max_ticks, stats, events, entity_count, module_stats, devices } = data;
+  totalMessages = stats.messages_sent || 0;
+
+  updateStats(tick, max_ticks, stats);
+  document.getElementById('statEntities').textContent = entity_count;
+
+  // Events
+  if (events) {
+    events.forEach(addEvent);
+    totalAlerts += events.filter(e => e.type === 'alert').length;
+    document.getElementById('statAlerts').textContent = totalAlerts;
+  }
+
+  // Module live stats in event log (every 10 ticks)
+  if (module_stats && tick % 10 === 0) {
+    const ms = module_stats;
+    const bagMsgs = (ms.bag?.sensor_msgs||0) + (ms.bag?.c2_msgs||0);
+    const kutukOps = (ms.kutuk?.puts||0) + (ms.kutuk?.gets||0);
+    const akimRoutes = ms.akim?.routes||0;
+    const cihazVeri = ms.cihaz?.toplam_veri||0;
+    addEvent({type:'module_summary', _html: `📊 Modül özet — BAĞ:${bagMsgs} mesaj | KÜTÜK:${kutukOps} işlem | AKIM:${akimRoutes} rota | DİRLİK:${ms.dirlik?.checks||0} kontrol | 🔌 Cihaz:${cihazVeri} veri`});
+  }
+
+  // Device panel update (every 5 ticks)
+  if (devices && tick % 5 === 0) {
+    updateDevicePanel(devices);
+  }
+
+  // Rate
+  const elapsed = Date.now()/1000 - startTime;
+  document.getElementById('statRate').textContent = elapsed > 0 ? (totalMessages / elapsed).toFixed(1) : '0';
+
+  // Fetch entities for canvas every 3 ticks
+  if (tick % 3 === 0) fetchEntities();
+}
+
+function updateStats(tick, maxTicks, stats) {
+  document.getElementById('statTick').textContent = tick;
+  document.getElementById('statMsg').textContent = stats.messages_sent || 0;
+  document.getElementById('statErr').textContent = stats.errors || 0;
+  const pct = maxTicks > 0 ? (tick / maxTicks * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('eventCount').textContent = totalEventCount;
+}
+
+function addEvent(ev) {
+  const log = document.getElementById('eventLog');
+  const div = document.createElement('div');
+  div.className = 'event-item';
+
+  // Custom HTML event (module summary)
+  if (ev._html) {
+    div.innerHTML = ev._html;
+    div.style.color = 'var(--dim)';
+    div.style.fontSize = '10px';
+    log.prepend(div);
+    totalEventCount++;
+    document.getElementById('eventCount').textContent = totalEventCount;
+    while (log.children.length > 500) log.removeChild(log.lastChild);
+    return;
+  }
+
+  let cls = 'ev-other', icon = '•';
+  if (ev.type?.includes('sensor')) { cls = 'ev-sensor'; icon = '📡'; }
+  else if (ev.type?.includes('c2')) { cls = 'ev-c2'; icon = '📨'; }
+  else if (ev.type === 'alert') { cls = 'ev-alert'; icon = '🚨'; }
+  else if (ev.type === 'damage') { cls = 'ev-damage'; icon = '💥'; }
+  else if (ev.type === 'low_fuel') { cls = 'ev-damage'; icon = '⛽'; }
+  else if (ev.type === 'device_tick') { cls = 'ev-sensor'; icon = '🔌'; }
+
+  let detail = '';
+  if (ev.type === 'device_tick') detail = `${ev.device_id} → ${ev.topic} (${ev.payload_count})`;
+  else if (ev.type?.includes('sensor')) detail = ev.sensor_type || ev.sensor || '';
+  else if (ev.type === 'alert') detail = `${ev.alert_type} — ${ev.detail||''}`;
+  else if (ev.type === 'damage') detail = `${ev.entity} → ${(ev.health||0).toFixed(0)}%`;
+  else if (ev.type === 'c2_generated') detail = `${ev.msg_type} ${ev.sender}→${ev.receiver}`;
+  else if (ev.type === 'course_change') detail = `${ev.entity} yön:${(ev.heading||0).toFixed(0)}°`;
+  else if (ev.type === 'low_fuel') detail = `${ev.entity} yakıt:${(ev.fuel||0).toFixed(0)}%`;
+  else detail = ev.type || '';
+
+  div.innerHTML = `${icon} <span class="ev-type ${cls}">${ev.type||'?'}</span> ${detail}`;
+  log.prepend(div);
+  totalEventCount++;
+  document.getElementById('eventCount').textContent = totalEventCount;
+  // DOM'da max 500 element tut (performans için)
+  while (log.children.length > 500) log.removeChild(log.lastChild);
+}
+
+function updateDevicePanel(devSummary) {
+  const tipIcons = {radar:'📡',flir:'🔥',optik_kamera:'📷',akustik:'🔊',gps:'📍',komuta_terminali:'🖥️',platform:'🏗️'};
+  const tipNames = {radar:'Radar',flir:'FLIR',optik_kamera:'Optik',akustik:'Akustik',gps:'GPS',komuta_terminali:'Komuta',platform:'Platform'};
+  const total = devSummary.toplam_cihaz || 0;
+  const running = devSummary.calisan || 0;
+  const data = devSummary.toplam_uretilen_veri || 0;
+  const errors = devSummary.toplam_hata || 0;
+
+  document.getElementById('deviceCount').innerHTML = `<span style="color:var(--green)">${running}</span>/${total} aktif · ${data} veri`;
+
+  const list = document.getElementById('deviceList');
+  const byType = devSummary.tipe_gore || {};
+  if (Object.keys(byType).length === 0) return;
+
+  let html = '';
+  for (const [tip, count] of Object.entries(byType)) {
+    const icon = tipIcons[tip] || '🔌';
+    const name = tipNames[tip] || tip;
+    html += `<div class="module-row" style="padding:3px 0"><div class="module-dot alive"></div><div style="flex:1"><div class="module-name" style="font-size:10px">${icon} ${name}</div></div><div style="font-size:10px;color:var(--cyan)">${count}x</div></div>`;
+  }
+  if (errors > 0) {
+    html += `<div style="font-size:9px;color:var(--red);padding:2px 0">⚠ ${errors} hata</div>`;
+  }
+  list.innerHTML = html;
+}
+
+function handleFinished(data) {
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+  document.getElementById('progressFill').style.width = '100%';
+  showResults(data.results);
+}
+
+// ── API Calls ──
+async function startSim() {
+  totalMessages = 0;
+  totalAlerts = 0;
+  totalEventCount = 0;
+  startTime = Date.now() / 1000;
+  document.getElementById('eventLog').innerHTML = '';
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnStop').disabled = false;
+
+  const body = {
+    scenario: document.getElementById('inScenario').value,
+    ticks: parseInt(document.getElementById('inTicks').value),
+    interval: parseFloat(document.getElementById('inInterval').value),
+    friendly: parseInt(document.getElementById('inFriendly').value),
+    enemy: parseInt(document.getElementById('inEnemy').value),
+    drones: parseInt(document.getElementById('inDrones').value),
+    connect: document.getElementById('inConnect').checked,
+  };
+  await fetch('/api/start', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+}
+
+async function stopSim() {
+  await fetch('/api/stop', { method: 'POST' });
+  document.getElementById('btnStop').disabled = true;
+  document.getElementById('btnStart').disabled = false;
+}
+
+async function fetchEntities() {
+  try {
+    const resp = await fetch('/api/entities');
+    allEntities = await resp.json();
+    drawBattlefield();
+  } catch(e) {}
+}
+
+async function checkModules() {
+  const dashboards = {
+    'BÜTÜN': 'http://127.0.0.1:8000/docs',
+    'YÜZEY': 'http://127.0.0.1:9103/',
+    'DURAK': 'http://127.0.0.1:9109/status',
+    'TUTUM': 'http://127.0.0.1:9111/status',
+    'TANI': 'http://127.0.0.1:9113/status',
+    'KÖZ': 'http://127.0.0.1:9115/status',
+  };
+  try {
+    const resp = await fetch('/api/modules/status');
+    const data = await resp.json();
+    const list = document.getElementById('moduleList');
+    list.innerHTML = '';
+    for (const [name, info] of Object.entries(data)) {
+      const dash = dashboards[name];
+      const link = (info.alive && dash)
+        ? `<a href="${dash}" target="_blank" style="color:var(--cyan);font-size:9px;margin-left:6px;text-decoration:none" title="Dashboard aç">🔗</a>`
+        : '';
+      const urlLink = info.alive
+        ? `<a href="${info.url}/health" target="_blank" style="color:var(--dim);text-decoration:none;font-size:9px">${info.url}</a>`
+        : `<span style="font-size:9px;color:var(--dim)">${info.url}</span>`;
+      const roleText = info.role ? `<div style="font-size:9px;color:var(--dim);margin-top:1px">${info.role}</div>` : '';
+      list.innerHTML += `<div class="module-row" title="${info.desc || ''}"><div class="module-dot ${info.alive?'alive':'dead'}"></div><div style="flex:1"><div style="display:flex;align-items:center"><div class="module-name">${info.icon||''} ${name}${link}</div></div>${roleText}</div><div>${urlLink}</div></div>`;
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+// ── Results ──
+function showResults(r) {
+  if (!r) return;
+  const overlay = document.getElementById('resultsOverlay');
+  const grid = document.getElementById('rptGrid');
+  const sub = document.getElementById('rptSubtitle');
+  const stats = r.stats || {};
+  const bf = r.battlefield || {};
+  const mods = r.modules || {};
+  const sensors = r.sensors || {};
+  const c2 = r.c2_messages || {};
+  const battle = r.battle_events || {};
+  const tp = r.throughput || {};
+  const duration = r.duration_sec || ((stats.end_time||0)-(stats.start_time||0));
+
+  sub.textContent = `${r.scenario||'?'} — ${r.ticks||0} tick, ${duration.toFixed(1)}s, ${r.description||''}`;
+
+  // Helper functions
+  function kvRow(label, value, color) {
+    const c = color ? ` style="color:${color}"` : '';
+    return `<div class="rpt-kv"><span class="rk">${label}</span><span class="rv"${c}>${value}</span></div>`;
+  }
+  function barRow(label, value, max, color) {
+    const pct = max > 0 ? Math.min(100, value/max*100) : 0;
+    return `<div class="rpt-bar-row"><span class="rpt-bar-label">${label}</span><div class="rpt-bar-track"><div class="rpt-bar-fill" style="width:${pct}%;background:${color}"></div></div><span class="rpt-bar-val">${value}</span></div>`;
+  }
+  function section(icon, title, body, full) {
+    return `<div class="rpt-section${full?' full':''}"><div class="rpt-section-title">${icon} ${title}</div><div class="rpt-section-body">${body}</div></div>`;
+  }
+
+  let html = '';
+
+  // ── 1. Genel Özet ──
+  const msgRate = tp.messages_per_sec || (duration > 0 ? ((stats.messages_sent||0)/duration).toFixed(1) : 0);
+  html += section('⚡', 'Genel Performans',
+    kvRow('Toplam Süre', `${duration.toFixed(2)}s`) +
+    kvRow('Tick Sayısı', `${r.ticks||0} / ${r.max_ticks||0}`) +
+    kvRow('Tick Aralığı', `${(r.tick_interval||0.5)*1000}ms`) +
+    kvRow('Toplam Mesaj', stats.messages_sent||0, 'var(--green)') +
+    kvRow('Toplam Hata', stats.errors||0, stats.errors > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Toplam Olay', r.event_count||0) +
+    kvRow('Mesaj/saniye', msgRate, 'var(--cyan)') +
+    kvRow('Ort. Mesaj/tick', tp.avg_per_tick||0) +
+    kvRow('Pik Mesaj/tick', tp.peak_per_tick||0, 'var(--orange)') +
+    kvRow('Min Mesaj/tick', tp.min_per_tick||0)
+  );
+
+  // ── 2. BÜTÜN Modülü ──
+  const b = mods.butun || {};
+  const bTotal = (b.requests||0) + (b.registrations||0) + (b.heartbeats||0) + (b.discoveries||0);
+  html += section('🏛️', 'BÜTÜN — Ana Çatı Sistemi',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Tüm modülleri yöneten orkestratör. Servis kayıtları, heartbeat ile canlılık kontrolü, çöken servislerin yeniden başlatılması.</div>' +
+    kvRow('Toplam İstek', bTotal) +
+    kvRow('Servis Kayıtları', b.registrations||0, 'var(--cyan)') +
+    kvRow('Heartbeat', b.heartbeats||0) +
+    kvRow('Keşif Sorgusu', b.discoveries||0) +
+    kvRow('API İstekleri', b.requests||0) +
+    kvRow('Hata', b.errors||0, (b.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 3. BAĞ Modülü ──
+  const bg = mods.bag || {};
+  const bagTotal = (bg.sensor_msgs||0) + (bg.c2_msgs||0) + (bg.alert_msgs||0) + (bg.telemetry_msgs||0);
+  const bagKB = ((bg.bytes_sent||0) / 1024).toFixed(1);
+  html += section('📡', 'BAĞ — Veri Transfer Katmanı',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Modüller arası mesaj taşıyıcı. Topic tabanlı pub/sub ile sensör, C2, alarm verilerini iletir. Milisaniye gecikme.</div>' +
+    kvRow('Toplam Publish', bg.publishes || bagTotal) +
+    kvRow('Sensör Mesajı', bg.sensor_msgs||0, 'var(--cyan)') +
+    kvRow('C2 Mesajı', bg.c2_msgs||0, 'var(--orange)') +
+    kvRow('Alarm Mesajı', bg.alert_msgs||0, 'var(--red)') +
+    kvRow('Telemetri', bg.telemetry_msgs||0) +
+    kvRow('Veri Aktarımı', `${bagKB} KB`, 'var(--accent)') +
+    kvRow('Hata', bg.errors||0, (bg.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 4. KÜTÜK Modülü ──
+  const k = mods.kutuk || {};
+  const kTotal = (k.puts||0) + (k.gets||0) + (k.deletes||0);
+  html += section('🗄️', 'KÜTÜK — Anlık Durum Veritabanı',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">RAFT konsensüs ile dağıtık anahtar-değer deposu. Varlık konumları ve sensör verileri burada saklanır. Tutarlılık garanti.</div>' +
+    kvRow('Toplam İşlem', kTotal) +
+    kvRow('PUT (Yazma)', k.puts||0, 'var(--green)') +
+    kvRow('GET (Okuma)', k.gets||0, 'var(--cyan)') +
+    kvRow('DELETE (Silme)', k.deletes||0) +
+    kvRow('Varlık Yazma', k.entity_writes||0, 'var(--yellow)') +
+    kvRow('Sensör Yazma', k.sensor_writes||0) +
+    kvRow('İz Kayıt', k.track_writes||0) +
+    kvRow('Hata', k.errors||0, (k.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 5. DİRLİK ──
+  const dl = mods.dirlik || {};
+  const dlTotal = (dl.checks||0);
+  html += section('🏥', 'DİRLİK — Sistem Sağlık Taraması',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">CPU, RAM, disk izleme ve servis probe\'ları. Anomali tespitinde alarm üretir, otomatik müdahale başlatır.</div>' +
+    kvRow('Toplam Kontrol', dlTotal) +
+    kvRow('Metrik Sorgu', dl.metrics||0, 'var(--cyan)') +
+    kvRow('Probe Sorgu', dl.probes||0, 'var(--green)') +
+    kvRow('Tespit Edilen Alarm', dl.alerts||0, (dl.alerts||0) > 0 ? 'var(--yellow)' : 'var(--green)') +
+    kvRow('Hata', dl.errors||0, (dl.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 6. BAĞDAŞ ──
+  const bd = mods.bagdas || {};
+  const bdTotal = (bd.converts||0) + (bd.validates||0) + (bd.pipelines||0) + (bd.bridges||0);
+  html += section('🔄', 'BAĞDAŞ — Polyglot Köprü & Codec',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">JSON ↔ MsgPack ↔ CBOR format dönüşümü. Şema doğrulama ve veri pipeline\'ları. NATO STANAG uyumluluğu.</div>' +
+    kvRow('Toplam İşlem', bdTotal) +
+    kvRow('Format Dönüşüm', bd.converts||0, 'var(--cyan)') +
+    kvRow('Şema Doğrulama', bd.validates||0, 'var(--green)') +
+    kvRow('Pipeline Çalıştırma', bd.pipelines||0, 'var(--yellow)') +
+    kvRow('Modül Köprüleme', bd.bridges||0, '#a855f7') +
+    kvRow('Hata', bd.errors||0, (bd.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 7. AKIM ──
+  const ak = mods.akim || {};
+  const akTotal = (ak.routes||0) + (ak.flows||0) + (ak.balancer_selects||0) + (ak.congestion_checks||0);
+  html += section('🌊', 'AKIM — Veri Trafiği Yönlendirme',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">QoS bazlı önceliklendirme: kritik alarm → düşük gecikme, telemetri → normal kuyruk. Tıkanıklık yönetimi ve yük dengeleme.</div>' +
+    kvRow('Toplam İşlem', akTotal) +
+    kvRow('Rota Hesaplama', ak.routes||0, 'var(--cyan)') +
+    kvRow('Akış Oluşturma', ak.flows||0, 'var(--green)') +
+    kvRow('Yük Dengeleme', ak.balancer_selects||0, 'var(--yellow)') +
+    kvRow('Tıkanıklık Kontrol', ak.congestion_checks||0, '#a855f7') +
+    kvRow('Hata', ak.errors||0, (ak.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 8. YURT ──
+  const yt = mods.yurt || {};
+  const ytTotal = (yt.store_puts||0) + (yt.store_gets||0) + (yt.syncs||0) + (yt.proxy_reqs||0) + (yt.partition_checks||0);
+  html += section('🏕️', 'YURT — Uç Bilişim ve Yerel Depolama',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Edge düğüm: merkeze bağlanamasa bile yerel depoda çalışır. Bağlantı gelince senkronize olur. Bölünme toleransı.</div>' +
+    kvRow('Toplam İşlem', ytTotal) +
+    kvRow('Depo Yazma', yt.store_puts||0, 'var(--cyan)') +
+    kvRow('Depo Okuma', yt.store_gets||0, 'var(--green)') +
+    kvRow('Senkronizasyon', yt.syncs||0, 'var(--yellow)') +
+    kvRow('Proxy İsteği', yt.proxy_reqs||0, '#a855f7') +
+    kvRow('Bölünme Kontrol', yt.partition_checks||0, '#f97316') +
+    kvRow('Hata', yt.errors||0, (yt.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 9. YÜZEY ──
+  const yz = mods.yuzey || {};
+  const yzTotal = (yz.tactical_updates||0) + (yz.entity_updates||0) + (yz.events_emitted||0) + (yz.layer_updates||0) + (yz.health_checks||0);
+  html += section('🗺️', 'YÜZEY — Taktiksel İzleme',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Savaş alanı haritası: varlıklar, sensörler, alarm bölgeleri katmanlı görüntülenir. Komutanın büyük resmi görmesini sağlar.</div>' +
+    kvRow('Toplam İşlem', yzTotal) +
+    kvRow('Taktik Güncelleme', yz.tactical_updates||0, 'var(--cyan)') +
+    kvRow('Varlık Güncellemesi', yz.entity_updates||0, 'var(--green)') +
+    kvRow('Olay Yayını', yz.events_emitted||0, 'var(--yellow)') +
+    kvRow('Katman Güncelleme', yz.layer_updates||0, '#a855f7') +
+    kvRow('Sağlık Kontrolü', yz.health_checks||0, '#f97316') +
+    kvRow('Hata', yz.errors||0, (yz.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 9. İM Modülü ──
+  const im = mods.im || {};
+  const imTotal = (im.enrollments||0) + (im.token_issues||0) + (im.cert_signs||0) + (im.verifications||0);
+  html += section('🔐', 'İM — Dijital Kimlik ve İmza',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Sıfır Güven mimarisi: her birime ECDSA P-256 sertifika, JWT token çifti verir. Sahte düğüm tespiti ve rol bazlı erişim kontrolü sağlar.</div>' +
+    kvRow('Toplam İşlem', imTotal) +
+    kvRow('Kayıt (Enroll)', im.enrollments||0, 'var(--green)') +
+    kvRow('Token Üretimi', im.token_issues||0, 'var(--cyan)') +
+    kvRow('Sertifika İmza', im.cert_signs||0, 'var(--yellow)') +
+    kvRow('Doğrulama', im.verifications||0, '#a855f7') +
+    kvRow('Token Yenileme', im.token_refreshes||0, 'var(--orange)') +
+    kvRow('Hata', im.errors||0, (im.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 10. YAYIN Modülü ──
+  const yy = mods.yayin || {};
+  const yyTotal = (yy.broadcasts||0) + (yy.encryptions||0) + (yy.compressions||0) + (yy.fec_encodes||0);
+  html += section('📡', 'YAYIN — Şifreli ve Sıkıştırılmış Veri Yayımı',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">AES-256-GCM şifreleme, DEFLATE sıkıştırma ve FEC ileri hata düzeltme ile güvenli yayın. Dar bant genişliğinde bile güvenilir emir iletimi.</div>' +
+    kvRow('Toplam İşlem', yyTotal) +
+    kvRow('Yayın', yy.broadcasts||0, 'var(--green)') +
+    kvRow('Şifreleme', yy.encryptions||0, 'var(--cyan)') +
+    kvRow('Sıkıştırma', yy.compressions||0, 'var(--yellow)') +
+    kvRow('FEC Kodlama', yy.fec_encodes||0, '#a855f7') +
+    kvRow('Abone', yy.subscribers||0, 'var(--orange)') +
+    kvRow('Hata', yy.errors||0, (yy.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 11. DURAK Modülü ──
+  const dk = mods.durak || {};
+  const dkTotal = (dk.enqueued||0) + (dk.dequeued||0) + (dk.scheduled||0);
+  html += section('⏸️', 'DURAK — Veri Paketi Önceliklendirme (QoS)',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">6 öncelik seviyesi (FLASH→BULK) ile askeri trafik yönetimi. NBC alarmı video akışının önüne geçer, WFQ zamanlayıcı ile açlık engellenir.</div>' +
+    kvRow('Toplam İşlem', dkTotal) +
+    kvRow('Kuyruklanan', dk.enqueued||0, 'var(--green)') +
+    kvRow('Çıkarılan', dk.dequeued||0, 'var(--cyan)') +
+    kvRow('Zamanlanan', dk.scheduled||0, 'var(--yellow)') +
+    kvRow('Düşürülen', dk.dropped||0, (dk.dropped||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Süresi Dolan', dk.expired||0, 'var(--orange)') +
+    kvRow('Hata', dk.errors||0, (dk.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 12. TUTUM Modülü ──
+  const tu = mods.tutum || {};
+  html += section('🔋', 'TUTUM — Batarya ve Kaynak Tüketimi İzleyicisi',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Platform batarya SoC/SoH takibi, doğrusal regresyon ile ömür tahmini, rüzgar/arazi faktör analizi, otomatik RTB önerisi ve görev yapılabilirlik değerlendirmesi.</div>' +
+    kvRow('Toplam Platform', tu.total_platforms||0) +
+    kvRow('Ort. SoC', (tu.avg_soc||0).toFixed(1) + '%', 'var(--green)') +
+    kvRow('Batarya Örnekleri', tu.battery_samples||0, 'var(--cyan)') +
+    kvRow('Tahmin Yapılan', tu.predictions||0, 'var(--yellow)') +
+    kvRow('Kritik Uyarı', tu.critical_alerts||0, (tu.critical_alerts||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('RTB Önerisi', tu.rtb_recommendations||0, (tu.rtb_recommendations||0) > 0 ? 'var(--orange)' : 'var(--green)') +
+    kvRow('Görev Devri', tu.handoff_recommendations||0, 'var(--dim)') +
+    kvRow('Hata', tu.errors||0, (tu.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 13. TANI Modülü ──
+  const tn = mods.tani || {};
+  html += section('🎯', 'TANI — Nesne Tespit ve Sınıflandırma',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">YOLOv7 tabanlı simüle nesne tespiti, 14 askeri sınıf, IFF (Dost/Düşman Tanıma), çoklu nesne izleme ve tehdit seviyesi hesaplama.</div>' +
+    kvRow('İşlenen Kare', tn.frames_processed||0) +
+    kvRow('Toplam Tespit', tn.total_detections||0, 'var(--cyan)') +
+    kvRow('Düşman Hedef', tn.hostile_detected||0, (tn.hostile_detected||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Aktif İz', tn.active_tracks||0, 'var(--yellow)') +
+    kvRow('Ort. Çıkarım', (tn.avg_inference_ms||0).toFixed(1) + 'ms', 'var(--cyan)') +
+    kvRow('Hata', tn.errors||0, (tn.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 14. KÖZ Modülü ──
+  const kz = mods.koz || {};
+  html += section('🔥', 'KÖZ — Termal İz ve Motor Sıcaklığı Analizi',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Kızılötesi algılama, 16 araç termal profili, soğuma eğrisi tahmini, termal kümeleme ve anomali tespiti.</div>' +
+    kvRow('Termal Tarama', kz.scan_count||kz.scans||0) +
+    kvRow('Aktif İmza', kz.active_signatures||kz.signatures||0, 'var(--cyan)') +
+    kvRow('Sıcak İmza', kz.hot_signatures||0, (kz.hot_signatures||0) > 5 ? 'var(--red)' : 'var(--yellow)') +
+    kvRow('Küme', kz.clusters||0, 'var(--blue)') +
+    kvRow('Anomali', kz.anomalies||0, (kz.anomalies||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Ortam Sıcaklığı', (kz.ambient_c||22).toFixed(1) + '°C')
+  );
+
+  // ── 15. SEZİ Modülü ──
+  const sz = mods.sezi || {};
+  html += section('🎨', 'SEZİ — Doku Analiziyle Kamuflaj Bulma',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Gabor dalgacık doku analizi, kamuflaj tespiti ve sınıflandırma, konveks/konkav yüzey algılama.</div>' +
+    kvRow('Tarama', sz.scans||0) +
+    kvRow('Kamuflaj Tespit', sz.camo_detected||0, (sz.camo_detected||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Yüksek Tehdit', sz.threats||0, (sz.threats||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Hata', sz.errors||0, (sz.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 16. YANKI Modülü ──
+  const yk = mods.yanki || {};
+  html += section('🔊', 'YANKI — Akustik Konumlandırma',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Çapraz korelasyon ve eşleştirilmiş filtre ile akustik olay tespiti, TOA üçgenlemesi ile düşman konumlandırma.</div>' +
+    kvRow('Akustik Tespit', yk.detections||0, 'var(--cyan)') +
+    kvRow('Konumlandırılan', yk.localized||0, 'var(--blue)') +
+    kvRow('Silah Atışı', yk.gunshots||0, (yk.gunshots||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Yüksek Tehdit', yk.threats||0, (yk.threats||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Hata', yk.errors||0, (yk.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 17. DUYUM Modülü ──
+  const dy = mods.duyum || {};
+  html += section('🔍', 'DUYUM — Açık Kaynak İstihbarat (OSINT)',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">NLP/semantik analiz ile OSINT verilerinden istihbarat raporu üretimi, kaynak yönetimi, çapraz doğrulama ve trend analizi.</div>' +
+    kvRow('Üretilen Rapor', dy.reports||0, 'var(--cyan)') +
+    kvRow('Aktif Kaynak', dy.sources||0, 'var(--blue)') +
+    kvRow('Yüksek Tehdit', dy.threats||0, (dy.threats||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Trend', dy.trends||0, 'var(--yellow)') +
+    kvRow('Hata', dy.errors||0, (dy.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 18. BAŞKALA Modülü ──
+  const bk = mods.baskala || {};
+  html += section('🛰️', 'BAŞKALA — Uydu Değişim Tespiti',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">SAR+Optik füzyon ile uydu görüntülerindeki stratejik değişimleri tespit eder. Siper kazılması, bina yıkımı, araç hareketi.</div>' +
+    kvRow('Değişim Tespit', bk.changes||0, 'var(--cyan)') +
+    kvRow('Toplam Görüntü', bk.images||0, 'var(--blue)') +
+    kvRow('Çapraz Doğrulama', bk.fused||0, 'var(--green)') +
+    kvRow('Yüksek Tehdit', bk.threats||0, (bk.threats||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Hata', bk.errors||0, (bk.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 19. SÖZGEÇ Modülü ──
+  const sg = mods.sozgec || {};
+  html += section('📶', 'SÖZGEÇ — Karmaşık Sinyal Ayıklama',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">FFT ve dalgacık dönüşümüyle karmaşık sinyal ortamını ayrıştırır. DSP filtre ile gürültü bastırır, dost/düşman ayrımı yapar.</div>' +
+    kvRow('Çıkarılan Sinyal', sg.signals||0, 'var(--cyan)') +
+    kvRow('Frekans Bandı', sg.bands||0, 'var(--blue)') +
+    kvRow('Dost Sinyal', sg.friendly||0, 'var(--green)') +
+    kvRow('Düşman Sinyal', sg.hostile||0, (sg.hostile||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Karıştırma Tespit', sg.jamming||0, (sg.jamming||0) > 0 ? 'var(--red)' : 'var(--green)') +
+    kvRow('Hata', sg.errors||0, (sg.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 20. İZLEK — Rota Tahmini ──
+  const iz = ms.izlek || {};
+  html += section('🧭', 'İZLEK — Rota Tahmini',
+    '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Kalman filtresi ve Markov zincirleriyle hedef rotasını tahmin eder. Kinematik analiz ile önleme atışı koordinatları hesaplar.</div>' +
+    kvRow('Rota Tahmini', iz.predictions||0, 'var(--cyan)') +
+    kvRow('Aktif İz', iz.tracks||0, 'var(--blue)') +
+    kvRow('Önleme Hesabı', iz.intercepts||0, 'var(--yellow)') +
+    kvRow('Manevra Tespit', iz.maneuvers||0, (iz.maneuvers||0) > 0 ? 'var(--orange)' : 'var(--green)') +
+    kvRow('Hata', iz.errors||0, (iz.errors||0) > 0 ? 'var(--red)' : 'var(--green)')
+  );
+
+  // ── 21. CİHAZ SOYUTLAMA KATMANI ──
+  const cr = r.cihaz_raporu || {};
+  const cd = r.cihaz_detay || {};
+  const tipIcons = {radar:'📡',flir:'🔥',optik_kamera:'📷',akustik:'🔊',gps:'📍',komuta_terminali:'🖥️',platform:'🏗️'};
+  const tipNames = {radar:'Radar',flir:'FLIR',optik_kamera:'Optik Kamera',akustik:'Akustik Sensör',gps:'GPS',komuta_terminali:'Komuta Terminali',platform:'Platform'};
+  let cihazHtml = '<div style="font-size:10px;color:var(--dim);margin-bottom:8px;line-height:1.4">Cihaz Soyutlama Katmanı: Gerçek/simüle cihazları aynı arayüzle yönetir. Prod\'a geçişte sadece YAML config değişir.</div>';
+  cihazHtml += kvRow('Toplam Cihaz', cr.toplam_cihaz||0, 'var(--cyan)');
+  cihazHtml += kvRow('Üretilen Veri', cr.toplam_uretilen_veri||0, 'var(--green)');
+  cihazHtml += kvRow('Yayınlanan', cr.toplam_yayinlanan||0, 'var(--yellow)');
+  cihazHtml += kvRow('Hata', cr.toplam_hata||0, (cr.toplam_hata||0) > 0 ? 'var(--red)' : 'var(--green)');
+  const byType = cr.tipe_gore || {};
+  if (Object.keys(byType).length > 0) {
+    cihazHtml += '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:10px;color:var(--dim)">Tip Dağılımı</div>';
+    for (const [tip, count] of Object.entries(byType)) {
+      cihazHtml += kvRow(`${tipIcons[tip]||'🔌'} ${tipNames[tip]||tip}`, `${count}x`, 'var(--cyan)');
+    }
+  }
+  // Cihaz detayları
+  if (Object.keys(cd).length > 0) {
+    cihazHtml += '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:10px;color:var(--dim)">Cihaz Detayları</div>';
+    for (const [cid, info] of Object.entries(cd)) {
+      const tip = info.tip || '';
+      const durum = info.durum || '';
+      const uretilen = info.stats?.uretilen_veri || 0;
+      const durColor = durum === 'CALISIYOR' ? 'var(--green)' : durum === 'DURDURULDU' ? 'var(--dim)' : 'var(--yellow)';
+      cihazHtml += `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:9px"><span style="color:var(--text)">${tipIcons[tip]||'🔌'} ${cid}</span><span style="color:${durColor}">${uretilen} veri</span></div>`;
+    }
+  }
+  html += section('🔌', 'Cihaz Soyutlama Katmanı', cihazHtml);
+
+  // ── 9.5 EĞİTİCİ AÇIKLAMA ──
+  const errorRate = (stats.messages_sent||0) > 0 ? ((stats.errors||0) / (stats.messages_sent||0) * 100).toFixed(1) : '0';
+  let eduStatus = '✅ Sistem mükemmel çalıştı';
+  let eduColor = 'var(--green)';
+  if (parseFloat(errorRate) >= 5) { eduStatus = '❌ Yüksek hata oranı — modül bağlantıları kontrol edilmeli'; eduColor = 'var(--red)'; }
+  else if (parseFloat(errorRate) >= 1) { eduStatus = '⚠️ Kabul edilebilir — bazı hatalar oluştu'; eduColor = 'var(--yellow)'; }
+
+  html += section('📚', 'Simülasyon Analizi',
+    '<div style="font-size:11px;line-height:1.6;color:var(--text)">' +
+    '<div style="margin-bottom:10px;color:var(--dim)">Bu simülasyonda sanal bir savaş alanı oluşturuldu. Cihaz Soyutlama Katmanı ile sensörler (radar, FLIR, optik, akustik), GPS, komuta terminalleri ve platform cihazları otomatik bağlandı. Her cihaz kendi verisini üretti ve BAĞ\'a yayınladı — tıpkı gerçek hayatta olduğu gibi. Prod\'a geçişte sadece YAML config değişir.</div>' +
+    `<div style="padding:8px;border-radius:4px;background:var(--surface2);margin-bottom:8px"><span style="color:${eduColor};font-weight:bold">${eduStatus}</span><br><span style="color:var(--dim)">Hata oranı: %${errorRate}</span></div>` +
+    '<div style="font-size:10px;color:var(--dim);border-top:1px solid var(--border);padding-top:8px;margin-top:4px">' +
+    '💡 <b>Gerçek dünyada:</b> Bu modüller fiziksel sensörler, gerçek haberleşme altyapısı ve operatör konsollarıyla entegre çalışır.<br>' +
+    '🔧 Simülasyon sadece development ortamında çalışır (OTUKEN_ENV=development)' +
+    '</div></div>', true
+  );
+
+  // ── 10. Sensör Dağılımı ──
+  const sensorTotal = Object.values(sensors).reduce((a,b) => a+b, 0) || 1;
+  const sensorColors = {radar:'#3b82f6', thermal:'#ef4444', acoustic:'#22c55e', optical:'#eab308', osint:'#a855f7'};
+  const sensorNames = {radar:'Radar', thermal:'Termal', acoustic:'Akustik', optical:'Optik', osint:'OSINT'};
+  let sensorBars = '';
+  for (const [type, count] of Object.entries(sensors)) {
+    sensorBars += barRow(sensorNames[type]||type, count, sensorTotal, sensorColors[type]||'#666');
+  }
+  html += section('📡', `Sensör Dağılımı (${sensorTotal} toplam)`, sensorBars);
+
+  // ── 6. C2 Mesaj Dağılımı ──
+  const c2Total = Object.values(c2).reduce((a,b) => a+b, 0) || 1;
+  const c2Colors = {order:'#f97316', report:'#3b82f6', intel:'#a855f7', alert:'#ef4444', request:'#22c55e', logistics:'#64748b', situation:'#06b6d4', ack:'#84cc16'};
+  const c2Names = {order:'Emir', report:'Rapor', intel:'İstihbarat', alert:'Alarm', request:'Talep', logistics:'Lojistik', situation:'Durum', ack:'Onay'};
+  let c2Bars = '';
+  for (const [type, count] of Object.entries(c2)) {
+    if (count > 0) c2Bars += barRow(c2Names[type]||type, count, c2Total, c2Colors[type]||'#666');
+  }
+  html += section('📨', `Komuta Mesajları (${c2Total} toplam)`, c2Bars);
+
+  // ── 7. Savaş Alanı Özeti ──
+  if (bf.total_entities) {
+    let bfHtml = kvRow('Toplam Varlık', bf.total_entities) +
+      kvRow('Aktif', bf.active||0, 'var(--green)') +
+      kvRow('Hasarlı', bf.damaged||0, 'var(--yellow)') +
+      kvRow('İmha', bf.destroyed||0, (bf.destroyed||0) > 0 ? 'var(--red)' : 'var(--green)') +
+      kvRow('Ort. Sağlık', `%${bf.avg_health||0}`) +
+      kvRow('Ort. Yakıt', `%${bf.avg_fuel||0}`);
+
+    // Fasiyon dağılımı
+    if (bf.by_faction) {
+      const facNames = {friendly:'Dost', enemy:'Düşman', neutral:'Tarafsız', civilian:'Sivil'};
+      const facColors = {friendly:'var(--cyan)', enemy:'var(--red)', neutral:'var(--dim)', civilian:'var(--green)'};
+      bfHtml += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">';
+      for (const [f, c] of Object.entries(bf.by_faction)) {
+        bfHtml += kvRow(facNames[f]||f, c, facColors[f]);
+      }
+      bfHtml += '</div>';
+    }
+    html += section('🗺️', 'Savaş Alanı', bfHtml);
+  }
+
+  // ── 8. Savaş Olayları ──
+  const evNames = {damage:'Hasar Olayı', destroyed:'İmha', course_change:'Rota Değişimi', low_fuel:'Düşük Yakıt', alerts:'Alarm'};
+  const evColors = {damage:'var(--yellow)', destroyed:'var(--red)', course_change:'var(--dim)', low_fuel:'var(--orange)', alerts:'var(--red)'};
+  let evHtml = '';
+  for (const [type, count] of Object.entries(battle)) {
+    evHtml += kvRow(evNames[type]||type, count, evColors[type]);
+  }
+  html += section('💥', 'Savaş Olayları', evHtml);
+
+  // ── 9. Birim Tipi Dağılımı ──
+  if (bf.by_type) {
+    const typeNames = {tank:'Tank', ifv:'ZMA', apc:'ZPT', artillery:'Topçu', air_defense:'Hava Savunma',
+      infantry:'Piyade', recon:'Keşif', logistics:'Lojistik', uav:'İHA', ucav:'SİHA',
+      helicopter:'Helikopter', fighter:'Savaş Uçağı', patrol_boat:'Devriye Botu',
+      command_post:'Komuta Merkezi', radar_station:'Radar İstasyonu', sensor_node:'Sensör Düğümü'};
+    const typeTotal = Object.values(bf.by_type).reduce((a,b) => a+b, 0) || 1;
+    let typeBars = '';
+    const sorted = Object.entries(bf.by_type).sort((a,b) => b[1]-a[1]);
+    for (const [type, count] of sorted) {
+      typeBars += barRow(typeNames[type]||type, count, typeTotal, 'var(--accent)');
+    }
+    html += section('🎖️', `Birim Tipleri (${typeTotal})`, typeBars);
+  }
+
+  // ── 10. Throughput Grafiği ──
+  const hist = r.tick_history || [];
+  if (hist.length > 0) {
+    const maxH = Math.max(...hist, 1);
+    let chartHtml = '<div style="font-size:10px;color:var(--dim);margin-bottom:4px">Tick bazında mesaj sayısı (yatay: tick, dikey: mesaj)</div><div class="rpt-mini-chart">';
+    // Çok fazla tick varsa örnekle
+    const step = Math.max(1, Math.floor(hist.length / 200));
+    for (let i = 0; i < hist.length; i += step) {
+      const h = Math.max(1, hist[i] / maxH * 56);
+      const hue = hist[i] >= maxH * 0.8 ? '0' : hist[i] >= maxH * 0.5 ? '40' : '200';
+      chartHtml += `<div class="rpt-mini-bar" style="height:${h}px;background:hsl(${hue},70%,50%)" title="Tick ${i+1}: ${hist[i]} mesaj"></div>`;
+    }
+    chartHtml += '</div>';
+    html += section('📈', 'Throughput Grafiği', chartHtml, true);
+  }
+
+  grid.innerHTML = html;
+  overlay.classList.add('show');
+}
+
+function closeResults() {
+  document.getElementById('resultsOverlay').classList.remove('show');
+}
+
+// ── Battlefield Canvas ──
+function drawBattlefield() {
+  const canvas = document.getElementById('battleCanvas');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (allEntities.length === 0) {
+    ctx.fillStyle = '#64748b';
+    ctx.font = '13px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('▶ Simülasyonu başlatın — savaş alanı burada canlanacak', canvas.width/2, canvas.height/2 - 30);
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#4a5568';
+    ctx.fillText('Dost birlikler (mavi), düşman (kırmızı), sensörler ve İHA\'lar', canvas.width/2, canvas.height/2);
+    ctx.fillText('harita üzerinde gerçek zamanlı hareket edecek', canvas.width/2, canvas.height/2 + 20);
+    return;
+  }
+
+  // Find bounds
+  let minLat=90, maxLat=-90, minLon=180, maxLon=-180;
+  allEntities.forEach(e => {
+    const p = e.position;
+    if (p.lat < minLat) minLat = p.lat;
+    if (p.lat > maxLat) maxLat = p.lat;
+    if (p.lon < minLon) minLon = p.lon;
+    if (p.lon > maxLon) maxLon = p.lon;
+  });
+
+  const pad = 30;
+  const w = canvas.width - pad*2;
+  const h = canvas.height - pad*2;
+  const latRange = (maxLat - minLat) || 0.01;
+  const lonRange = (maxLon - minLon) || 0.01;
+
+  function toXY(lat, lon) {
+    return {
+      x: pad + ((lon - minLon) / lonRange) * w,
+      y: pad + ((maxLat - lat) / latRange) * h,
+    };
+  }
+
+  // Grid lines
+  ctx.strokeStyle = '#1a2332';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad + (h/4) * i;
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(pad+w, y); ctx.stroke();
+    const x = pad + (w/4) * i;
+    ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, pad+h); ctx.stroke();
+  }
+
+  // Draw entities
+  const icons = {
+    tank: '◆', ifv: '◆', apc: '◆', artillery: '✦', air_defense: '⬡',
+    infantry: '●', recon: '◇', logistics: '□',
+    uav: '△', ucav: '▲', helicopter: '✈', fighter: '✈',
+    patrol_boat: '⬠', command_post: '★', radar_station: '✦', sensor_node: '·',
+  };
+  const factionColors = {
+    friendly: '#06b6d4', enemy: '#ef4444', neutral: '#64748b', civilian: '#22c55e'
+  };
+
+  allEntities.forEach(e => {
+    const pos = toXY(e.position.lat, e.position.lon);
+    const color = factionColors[e.faction] || '#888';
+    const icon = icons[e.unit_type] || '●';
+    const size = e.unit_type === 'sensor_node' ? 3 : (e.unit_type === 'command_post' ? 8 : 5);
+
+    // Health glow for damaged
+    if (e.health < 50) {
+      ctx.fillStyle = `rgba(239,68,68,0.3)`;
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, size+4, 0, Math.PI*2); ctx.fill();
+    }
+
+    ctx.fillStyle = color;
+    ctx.font = `${size*2+2}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(icon, pos.x, pos.y);
+
+    // Heading line for moving units
+    if (e.speed_kmh > 5 && e.status !== 'destroyed') {
+      const rad = (e.heading_deg - 90) * Math.PI / 180;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.lineTo(pos.x + Math.cos(rad) * 12, pos.y + Math.sin(rad) * 12);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  });
+
+  // Legend
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
+  let ly = canvas.height - 12;
+  [['Dost','#06b6d4'],['Düşman','#ef4444'],['Tarafsız','#64748b']].forEach(([lbl,col],i) => {
+    const lx = pad + i * 80;
+    ctx.fillStyle = col;
+    ctx.fillRect(lx, ly, 8, 8);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(lbl, lx + 12, ly + 8);
+  });
+
+  document.getElementById('canvasInfo').textContent = `${allEntities.length} varlık`;
+}
+
+// ── Init ──
+connectWS();
+checkModules();
+setInterval(checkModules, 10000);
+window.addEventListener('resize', drawBattlefield);
+drawBattlefield();
+
+// Load scenarios
+fetch('/api/scenarios').then(r=>r.json()).then(data => {
+  const sel = document.getElementById('inScenario');
+  sel.innerHTML = '';
+  data.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.name;
+    opt.textContent = s.description || s.name;
+    sel.appendChild(opt);
+  });
+}).catch(()=>{});
+</script>
+</body>
+</html>

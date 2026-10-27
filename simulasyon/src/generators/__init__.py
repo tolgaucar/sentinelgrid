@@ -1,0 +1,1 @@
+"""Veri üreteçleri paketi."""

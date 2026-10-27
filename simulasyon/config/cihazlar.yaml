@@ -1,0 +1,172 @@
+# ═══════════════════════════════════════════════════════════════
+#  ÖTÜKEN-MATRİS — Cihaz Konfigürasyonu
+# ═══════════════════════════════════════════════════════════════
+#
+#  Bu dosya tüm sensör ve cihazları tanımlar.
+#  Prod'a geçişte sadece "surucu" alanı değişir, kod değişmez.
+#
+#  Örnek:
+#    surucu: sim              → Simüle cihaz (geliştirme)
+#    surucu: thales_rdr_4000  → Gerçek Thales radar (üretim)
+#    surucu: aselsan_cats     → Gerçek ASELSAN termal kamera
+#
+#  Yeni sürücü eklemek:
+#    1. src/cihaz/suruculer/  altına sürücü dosyası oluştur
+#    2. yonetici.py → DRIVER_REGISTRY'ye kaydet
+#    3. Bu dosyada "surucu" alanını değiştir
+# ═══════════════════════════════════════════════════════════════
+
+# Savaş alanı merkez noktası
+savash_alani:
+  merkez_lat: 39.925
+  merkez_lon: 32.837
+  yaricap_km: 50
+  ortam_sicaklik_c: 22.0
+
+cihazlar:
+  # ── RADAR SENSÖRLERİ ──
+  - tip: radar
+    surucu: sim                    # Prod: "aselsan_cafrad" / "thales_rdr_4000"
+    id: radar-kuzey-01
+    ad: "Kuzey Sektör Radar"
+    konum: [40.05, 32.70]
+    menzil_km: 150
+    frekans_hz: 10
+    fov_derece: 360
+    oncelik: 2
+    aktif: true
+
+  - tip: radar
+    surucu: sim
+    id: radar-guney-01
+    ad: "Güney Sektör Radar"
+    konum: [39.80, 32.95]
+    menzil_km: 120
+    frekans_hz: 8
+    fov_derece: 360
+    oncelik: 2
+    aktif: true
+
+  - tip: radar
+    surucu: sim
+    id: radar-hava-01
+    ad: "Hava Savunma Radarı"
+    konum: [39.92, 32.84]
+    menzil_km: 250
+    frekans_hz: 15
+    fov_derece: 360
+    oncelik: 1
+    ozel:
+      mod: "hava_gozetleme"
+    aktif: true
+
+  # ── TERMAL KAMERALAR (FLIR) ──
+  - tip: flir
+    surucu: sim                    # Prod: "flir_a700" / "aselsan_cats"
+    id: flir-gozlem-01
+    ad: "Gözetleme FLIR"
+    konum: [39.95, 32.80]
+    menzil_km: 20
+    frekans_hz: 30
+    cozunurluk: 640
+    fov_derece: 24
+    oncelik: 4
+    ambient_c: 22.0
+    aktif: true
+
+  - tip: flir
+    surucu: sim
+    id: flir-sinir-01
+    ad: "Sınır FLIR"
+    konum: [40.00, 32.90]
+    menzil_km: 15
+    frekans_hz: 30
+    cozunurluk: 640
+    fov_derece: 36
+    oncelik: 4
+    aktif: true
+
+  # ── OPTİK KAMERALAR ──
+  - tip: optik_kamera
+    surucu: sim                    # Prod: "axis_p1445" / "bosch_dinion"
+    id: optik-kule-01
+    ad: "Gözetleme Kulesi Kamera"
+    konum: [39.93, 32.85]
+    menzil_km: 30
+    frekans_hz: 25
+    cozunurluk: 1920
+    fov_derece: 60
+    oncelik: 5
+    aktif: true
+
+  - tip: optik_kamera
+    surucu: sim
+    id: optik-iha-01
+    ad: "İHA Optik Kamera"
+    konum: [39.925, 32.837]        # Dinamik konum — İHA'ya bağlı
+    menzil_km: 15
+    frekans_hz: 25
+    cozunurluk: 4096
+    fov_derece: 45
+    oncelik: 3
+    aktif: true
+
+  # ── AKUSTİK SENSÖRLER ──
+  - tip: akustik
+    surucu: sim                    # Prod: "aselsan_askarad"
+    id: akustik-bati-01
+    ad: "Batı Akustik Dizisi"
+    konum: [39.90, 32.75]
+    menzil_km: 10
+    frekans_hz: 50
+    oncelik: 5
+    aktif: true
+
+  - tip: akustik
+    surucu: sim
+    id: akustik-dogu-01
+    ad: "Doğu Akustik Dizisi"
+    konum: [39.95, 32.95]
+    menzil_km: 10
+    frekans_hz: 50
+    oncelik: 5
+    aktif: true
+
+  # ── GPS/INS KONUM SENSÖRLERİ ──
+  - tip: gps
+    surucu: sim                    # Prod: "ublox_f9p" / "trimble_bx992"
+    id: gps-birlik-takip
+    ad: "Birlik GPS Takip"
+    konum: [39.925, 32.837]
+    frekans_hz: 1
+    oncelik: 6
+    aktif: true
+
+  # ── KOMUTA TERMİNALLERİ ──
+  - tip: komuta_terminali
+    surucu: sim                    # Prod: "aselsan_pusat" / "harris_falcon"
+    id: komuta-merkez-01
+    ad: "Merkez Komuta Terminali"
+    konum: [39.925, 32.837]
+    frekans_hz: 0.2
+    oncelik: 2
+    aktif: true
+
+  - tip: komuta_terminali
+    surucu: sim
+    id: komuta-ileri-01
+    ad: "İleri Komuta Terminali"
+    konum: [39.95, 32.85]
+    frekans_hz: 0.1
+    oncelik: 3
+    aktif: true
+
+  # ── PLATFORM (ARAÇ/BİRLİK TAKİP) ──
+  - tip: platform
+    surucu: sim                    # Prod: gerçek araç bilgisayarı
+    id: platform-ana
+    ad: "Ana Platform Takip"
+    konum: [39.925, 32.837]
+    frekans_hz: 2
+    oncelik: 3
+    aktif: true

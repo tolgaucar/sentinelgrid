@@ -1,0 +1,35 @@
+# BÜTÜN - Üretim (Production) yapılandırması
+# default.yaml üzerine yazılır
+
+system:
+  name: "ÖTÜKEN-MATRİS"
+  module: "BÜTÜN"
+  version: "0.1.0"
+
+gateway:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins: ["https://otukenmatris.mil.tr"]
+  rate_limit:
+    requests_per_minute: 5000
+    burst: 200
+
+service_mesh:
+  heartbeat_interval_sec: 3
+  deregister_timeout_sec: 15
+  circuit_breaker:
+    failure_threshold: 3
+    recovery_timeout_sec: 60
+    half_open_max_calls: 2
+
+orchestrator:
+  max_replicas: 50
+  min_replicas: 2
+  scale_up_threshold_cpu: 70.0
+  scale_down_threshold_cpu: 15.0
+  health_check_interval_sec: 5
+
+resources:
+  cpu_limit_percent: 85.0
+  memory_limit_mb: 32768
+  disk_limit_mb: 204800

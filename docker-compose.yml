@@ -1,0 +1,515 @@
+# ÖTÜKEN-MATRİS — Docker Compose
+# Tüm Faz 1 (ULAK kümesi) modüllerini başlatır
+#
+# Kullanım:
+#   docker compose up -d          — Tüm modülleri başlat
+#   docker compose logs -f yuzey  — YÜZEY loglarını izle
+#   docker compose down           — Tüm modülleri durdur
+
+services:
+  butun:
+    build:
+      context: .
+      dockerfile: butun/Dockerfile
+    container_name: otuken-butun
+    ports:
+      - "8000:8000"
+    environment:
+      - OTUKEN_ENV=prod
+      - BUTUN_PORT=8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  bag:
+    build:
+      context: .
+      dockerfile: bag/Dockerfile
+    container_name: otuken-bag
+    ports:
+      - "9090:9090"
+      - "9091:9091"
+    environment:
+      - OTUKEN_ENV=prod
+      - BAG_GRPC_PORT=9090
+      - BAG_HTTP_PORT=9091
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9091/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  kutuk:
+    build:
+      context: .
+      dockerfile: kutuk/Dockerfile
+    container_name: otuken-kutuk
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      - OTUKEN_ENV=prod
+      - KUTUK_GRPC_PORT=9092
+      - KUTUK_HTTP_PORT=9093
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  dirlik:
+    build:
+      context: .
+      dockerfile: dirlik/Dockerfile
+    container_name: otuken-dirlik
+    ports:
+      - "9094:9094"
+      - "9095:9095"
+    environment:
+      - OTUKEN_ENV=prod
+      - DIRLIK_HTTP_PORT=9095
+      - DIRLIK_GRPC_PORT=9094
+      - DIRLIK_BUTUN_URL=http://butun:8000
+      - DIRLIK_BAG_URL=http://bag:9091
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  bagdas:
+    build:
+      context: .
+      dockerfile: bagdas/Dockerfile
+    container_name: otuken-bagdas
+    ports:
+      - "9096:9096"
+      - "9097:9097"
+    environment:
+      - OTUKEN_ENV=prod
+      - BAGDAS_HTTP_PORT=9097
+      - BAGDAS_BUTUN_URL=http://butun:8000
+      - BAGDAS_BAG_URL=http://bag:9091
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9097/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  akim:
+    build:
+      context: .
+      dockerfile: akim/Dockerfile
+    container_name: otuken-akim
+    ports:
+      - "9098:9098"
+      - "9099:9099"
+    environment:
+      - OTUKEN_ENV=prod
+      - AKIM_HTTP_PORT=9099
+      - AKIM_GRPC_PORT=9098
+      - AKIM_BUTUN_URL=http://butun:8000
+      - AKIM_BAG_URL=http://bag:9091
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  yurt:
+    build:
+      context: .
+      dockerfile: yurt/Dockerfile
+    container_name: otuken-yurt
+    ports:
+      - "9100:9100"
+      - "9101:9101"
+    environment:
+      - OTUKEN_ENV=prod
+      - YURT_HTTP_PORT=9101
+      - YURT_GRPC_PORT=9100
+      - YURT_CLOUD_URL=http://kutuk:9093
+    depends_on:
+      kutuk:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  yuzey:
+    build:
+      context: .
+      dockerfile: yuzey/Dockerfile
+    container_name: otuken-yuzey
+    ports:
+      - "9103:9103"
+    environment:
+      - OTUKEN_ENV=prod
+      - YUZEY_HTTP_PORT=9103
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+      kutuk:
+        condition: service_healthy
+      dirlik:
+        condition: service_started
+      bagdas:
+        condition: service_healthy
+      akim:
+        condition: service_started
+      yurt:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9103/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  im:
+    build:
+      context: .
+      dockerfile: im/Dockerfile
+    container_name: otuken-im
+    ports:
+      - "9104:9104"
+      - "9105:9105"
+    environment:
+      - OTUKEN_ENV=prod
+      - IM_GRPC_PORT=9104
+      - IM_HTTP_PORT=9105
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9105/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  yayin:
+    build:
+      context: .
+      dockerfile: yayin/Dockerfile
+    container_name: otuken-yayin
+    ports:
+      - "9106:9106"
+      - "9107:9107"
+    environment:
+      - OTUKEN_ENV=prod
+      - YAYIN_GRPC_PORT=9106
+      - YAYIN_HTTP_PORT=9107
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+      im:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9107/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  durak:
+    build:
+      context: .
+      dockerfile: durak/Dockerfile
+    container_name: otuken-durak
+    ports:
+      - "9108:9108"
+      - "9109:9109"
+    environment:
+      - OTUKEN_ENV=prod
+      - DURAK_GRPC_PORT=9108
+      - DURAK_HTTP_PORT=9109
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9109/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  tutum:
+    build:
+      context: .
+      dockerfile: tutum/Dockerfile
+    container_name: otuken-tutum
+    ports:
+      - "9110:9110"
+      - "9111:9111"
+    environment:
+      - OTUKEN_ENV=prod
+      - TUTUM_GRPC_PORT=9110
+      - TUTUM_HTTP_PORT=9111
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9111/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  tani:
+    build:
+      context: .
+      dockerfile: tani/Dockerfile
+    container_name: otuken-tani
+    ports:
+      - "9112:9112"
+      - "9113:9113"
+    environment:
+      - OTUKEN_ENV=prod
+      - TANI_GRPC_PORT=9112
+      - TANI_HTTP_PORT=9113
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9113/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  koz:
+    build:
+      context: .
+      dockerfile: koz/Dockerfile
+    container_name: otuken-koz
+    ports:
+      - "9114:9114"
+      - "9115:9115"
+    environment:
+      - OTUKEN_ENV=prod
+      - KOZ_GRPC_PORT=9114
+      - KOZ_PORT=9115
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9115/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  sezi:
+    build:
+      context: .
+      dockerfile: sezi/Dockerfile
+    container_name: otuken-sezi
+    ports:
+      - "9116:9116"
+      - "9117:9117"
+    environment:
+      - OTUKEN_ENV=prod
+      - SEZI_PORT=9116
+      - SEZI_GRPC_PORT=9117
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9116/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  yanki:
+    build:
+      context: .
+      dockerfile: yanki/Dockerfile
+    container_name: otuken-yanki
+    ports:
+      - "9118:9118"
+      - "9119:9119"
+    environment:
+      - OTUKEN_ENV=prod
+      - YANKI_PORT=9118
+      - YANKI_GRPC_PORT=9119
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9118/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  duyum:
+    build:
+      context: .
+      dockerfile: duyum/Dockerfile
+    container_name: otuken-duyum
+    ports:
+      - "9120:9120"
+      - "9121:9121"
+    environment:
+      - OTUKEN_ENV=prod
+      - DUYUM_PORT=9120
+      - DUYUM_GRPC_PORT=9121
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9120/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  baskala:
+    build:
+      context: .
+      dockerfile: baskala/Dockerfile
+    container_name: otuken-baskala
+    ports:
+      - "9122:9122"
+      - "9123:9123"
+    environment:
+      - OTUKEN_ENV=prod
+      - BASKALA_PORT=9122
+      - BASKALA_GRPC_PORT=9123
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9122/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  sozgec:
+    build:
+      context: .
+      dockerfile: sozgec/Dockerfile
+    container_name: otuken-sozgec
+    ports:
+      - "9124:9124"
+      - "9125:9125"
+    environment:
+      - OTUKEN_ENV=prod
+      - SOZGEC_PORT=9124
+      - SOZGEC_GRPC_PORT=9125
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9124/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+  izlek:
+    build:
+      context: .
+      dockerfile: izlek/Dockerfile
+    container_name: otuken-izlek
+    ports:
+      - "9126:9126"
+      - "9127:9127"
+    environment:
+      - OTUKEN_ENV=prod
+      - IZLEK_PORT=9126
+      - IZLEK_GRPC_PORT=9127
+    depends_on:
+      butun:
+        condition: service_healthy
+      bag:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9126/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - otuken
+
+networks:
+  otuken:
+    driver: bridge
+    name: otuken-network

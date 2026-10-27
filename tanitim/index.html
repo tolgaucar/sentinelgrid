@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ÖTÜKEN-MATRİS — Yeni Nesil Donanımsız Savunma Platformu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e17;--bg2:#111827;--bg3:#1a2236;--bg4:#232d42;
+  --t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;
+  --accent:#38bdf8;--accent2:#818cf8;--accent3:#a78bfa;
+  --green:#34d399;--red:#f87171;--amber:#fbbf24;--cyan:#22d3ee;
+  --ulak:#38bdf8;--gorgu:#34d399;--buyruk:#fbbf24;--kovan:#f87171;--kin:#a78bfa;
+  --glow:0 0 30px rgba(56,189,248,.15);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* ─── Nav ─── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,14,23,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(56,189,248,.1);padding:0 2rem;display:flex;align-items:center;height:56px}
+nav .logo{font-weight:800;font-size:1.1rem;letter-spacing:1px;color:var(--accent);white-space:nowrap}
+nav .logo span{color:var(--t2);font-weight:400;margin-left:6px;font-size:.85rem}
+nav ul{list-style:none;display:flex;gap:4px;margin-left:auto}
+nav ul li a{display:block;padding:6px 14px;border-radius:6px;font-size:.82rem;color:var(--t2);transition:.2s}
+nav ul li a:hover,nav ul li a.active{background:var(--bg3);color:var(--t1);text-decoration:none}
+
+/* ─── Hero ─── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(56,189,248,.06),transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 18px;border:1px solid var(--bg4);border-radius:999px;font-size:.78rem;color:var(--t2);margin-bottom:2rem;background:var(--bg2)}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:1rem}
+.hero h1 .gr{background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p.motto{font-size:clamp(1rem,2vw,1.3rem);color:var(--t2);font-style:italic;margin-bottom:2.5rem;max-width:600px}
+.hero p.desc{font-size:.95rem;color:var(--t3);max-width:680px;margin-bottom:3rem}
+
+/* ─── Stats bar ─── */
+.stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--bg3);border-radius:14px;overflow:hidden;margin-bottom:3rem;box-shadow:var(--glow)}
+.stat{flex:1;min-width:140px;background:var(--bg2);padding:1.5rem 1rem;text-align:center}
+.stat .num{font-size:2rem;font-weight:800;color:var(--accent)}
+.stat .label{font-size:.75rem;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+
+/* ─── Section ─── */
+section{padding:5rem 2rem}
+.container{max-width:1200px;margin:0 auto}
+.section-label{display:inline-block;font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);border:1px solid rgba(56,189,248,.2);padding:4px 14px;border-radius:999px;margin-bottom:1rem}
+.section-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;margin-bottom:.5rem}
+.section-desc{color:var(--t2);max-width:640px;margin-bottom:3rem;font-size:.95rem}
+
+/* ─── Architecture ─── */
+.arch{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:4rem}
+.arch-phase{flex:1;min-width:180px;max-width:220px;border-radius:14px;padding:1.5rem 1rem;text-align:center;border:1px solid rgba(255,255,255,.06);position:relative;transition:.3s;cursor:pointer}
+.arch-phase:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.arch-phase .phase-num{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;opacity:.6;margin-bottom:.5rem}
+.arch-phase .phase-name{font-size:1.3rem;font-weight:800;margin-bottom:.3rem}
+.arch-phase .phase-bio{font-size:.72rem;color:var(--t3);margin-bottom:.8rem}
+.arch-phase .phase-count{font-size:.8rem;font-weight:600}
+.arch-phase.ulak{background:linear-gradient(135deg,rgba(56,189,248,.1),var(--bg2));border-color:rgba(56,189,248,.2)}
+.arch-phase.ulak .phase-name,.arch-phase.ulak .phase-count{color:var(--ulak)}
+.arch-phase.gorgu{background:linear-gradient(135deg,rgba(52,211,153,.1),var(--bg2));border-color:rgba(52,211,153,.2)}
+.arch-phase.gorgu .phase-name,.arch-phase.gorgu .phase-count{color:var(--gorgu)}
+.arch-phase.buyruk{background:linear-gradient(135deg,rgba(251,191,36,.1),var(--bg2));border-color:rgba(251,191,36,.2)}
+.arch-phase.buyruk .phase-name,.arch-phase.buyruk .phase-count{color:var(--buyruk)}
+.arch-phase.kovan{background:linear-gradient(135deg,rgba(248,113,113,.1),var(--bg2));border-color:rgba(248,113,113,.2)}
+.arch-phase.kovan .phase-name,.arch-phase.kovan .phase-count{color:var(--kovan)}
+.arch-phase.kin{background:linear-gradient(135deg,rgba(167,139,250,.1),var(--bg2));border-color:rgba(167,139,250,.2)}
+.arch-phase.kin .phase-name,.arch-phase.kin .phase-count{color:var(--kin)}
+
+/* arrow between phases */
+.arch-arrow{display:flex;align-items:center;color:var(--t3);font-size:1.2rem;padding:0 2px}
+@media(max-width:900px){.arch-arrow{display:none}}
+
+/* ─── Filter bar ─── */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2rem}
+.filters button{padding:8px 18px;border:1px solid var(--bg4);background:var(--bg2);color:var(--t2);border-radius:8px;cursor:pointer;font-size:.82rem;transition:.2s}
+.filters button:hover{border-color:var(--accent);color:var(--t1)}
+.filters button.active{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600}
+
+/* ─── Module grid ─── */
+.modules{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.mod-card{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:1.2rem 1.4rem;transition:.3s;cursor:pointer;position:relative;overflow:hidden}
+.mod-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:.3s}
+.mod-card:hover{border-color:rgba(255,255,255,.12);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.mod-card:hover::before{opacity:1}
+.mod-card[data-faz="1"]::before{background:var(--ulak)}
+.mod-card[data-faz="2"]::before{background:var(--gorgu)}
+.mod-card[data-faz="3"]::before{background:var(--buyruk)}
+.mod-card[data-faz="4"]::before{background:var(--kovan)}
+.mod-card[data-faz="5"]::before{background:var(--kin)}
+.mod-head{display:flex;align-items:center;gap:10px;margin-bottom:.6rem}
+.mod-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.mod-card[data-faz="1"] .mod-icon{background:rgba(56,189,248,.12);color:var(--ulak)}
+.mod-card[data-faz="2"] .mod-icon{background:rgba(52,211,153,.12);color:var(--gorgu)}
+.mod-card[data-faz="3"] .mod-icon{background:rgba(251,191,36,.12);color:var(--buyruk)}
+.mod-card[data-faz="4"] .mod-icon{background:rgba(248,113,113,.12);color:var(--kovan)}
+.mod-card[data-faz="5"] .mod-icon{background:rgba(167,139,250,.12);color:var(--kin)}
+.mod-name{font-weight:700;font-size:1rem}
+.mod-tag{margin-left:auto;font-size:.65rem;padding:2px 8px;border-radius:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.mod-card[data-faz="1"] .mod-tag{background:rgba(56,189,248,.1);color:var(--ulak)}
+.mod-card[data-faz="2"] .mod-tag{background:rgba(52,211,153,.1);color:var(--gorgu)}
+.mod-card[data-faz="3"] .mod-tag{background:rgba(251,191,36,.1);color:var(--buyruk)}
+.mod-card[data-faz="4"] .mod-tag{background:rgba(248,113,113,.1);color:var(--kovan)}
+.mod-card[data-faz="5"] .mod-tag{background:rgba(167,139,250,.1);color:var(--kin)}
+.mod-subtitle{font-size:.8rem;color:var(--t3);margin-bottom:.5rem}
+.mod-desc{font-size:.82rem;color:var(--t2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;transition:.3s}
+.mod-card.expanded .mod-desc{-webkit-line-clamp:unset}
+.mod-techs{display:flex;flex-wrap:wrap;gap:4px;margin-top:.7rem}
+.mod-tech{font-size:.68rem;padding:2px 8px;border-radius:4px;background:var(--bg3);color:var(--t3)}
+.mod-status{position:absolute;top:1.2rem;right:1.2rem;width:8px;height:8px;border-radius:50%}
+.mod-status.done{background:var(--green)}
+.mod-status.pending{background:var(--t3)}
+
+/* ─── Timeline ─── */
+.timeline{position:relative;padding-left:32px;margin-top:3rem}
+.timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:var(--bg4)}
+.tl-item{position:relative;margin-bottom:2.5rem}
+.tl-dot{position:absolute;left:-25px;top:4px;width:14px;height:14px;border-radius:50%;border:2px solid;background:var(--bg)}
+.tl-item[data-faz="1"] .tl-dot{border-color:var(--ulak)}
+.tl-item[data-faz="2"] .tl-dot{border-color:var(--gorgu)}
+.tl-item[data-faz="3"] .tl-dot{border-color:var(--buyruk)}
+.tl-item[data-faz="4"] .tl-dot{border-color:var(--kovan)}
+.tl-item[data-faz="5"] .tl-dot{border-color:var(--kin)}
+.tl-item.active .tl-dot{background:var(--ulak);border-color:var(--ulak)}
+.tl-phase{font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.3rem}
+.tl-title{font-size:1.2rem;font-weight:700;margin-bottom:.3rem}
+.tl-desc{font-size:.85rem;color:var(--t2);max-width:600px}
+
+/* ─── Tech stack ─── */
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:2rem}
+.tech-card{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:1.2rem}
+.tech-card h4{font-size:.95rem;margin-bottom:.4rem}
+.tech-card p{font-size:.82rem;color:var(--t2)}
+.tech-card .tech-label{font-size:.68rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem}
+
+/* ─── Footer ─── */
+footer{border-top:1px solid var(--bg3);padding:3rem 2rem;text-align:center}
+footer p{color:var(--t3);font-size:.8rem}
+footer .motto-footer{font-size:1rem;color:var(--t2);font-style:italic;margin-bottom:1rem}
+
+/* ─── Responsive ─── */
+@media(max-width:768px){
+  nav ul{display:none}
+  .modules{grid-template-columns:1fr}
+  .stats{flex-direction:column}
+  section{padding:3rem 1rem}
+}
+
+/* ─── Animations ─── */
+.fade-in{opacity:0;transform:translateY(20px);transition:.6s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ─── Navigation ─── -->
+<nav>
+  <div class="logo">ÖTÜKEN-MATRİS <span>v1.0</span></div>
+  <ul>
+    <li><a href="#genel">Genel</a></li>
+    <li><a href="#mimari">Mimari</a></li>
+    <li><a href="#moduller">60 Modül</a></li>
+    <li><a href="#fazlar">Fazlar</a></li>
+    <li><a href="#teknoloji">Teknoloji</a></li>
+  </ul>
+</nav>
+
+<!-- ─── Hero ─── -->
+<section class="hero" id="genel">
+  <div class="hero-badge"><span class="dot"></span> Faz 1 / 5 — ULAK Kümesi Aktif</div>
+  <h1><span class="gr">ÖTÜKEN-MATRİS</span></h1>
+  <p class="motto">„Görünmeyeni gör, duyulmayanı duy, emredileni yap."</p>
+  <p class="desc">Donanımdan bağımsız, tamamen algoritmik ve yazılım tabanlı yeni nesil C4ISR platformu. 5 küme, 60 modül, tek bir dijital beyin.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="num">60</div><div class="label">Modül</div></div>
+    <div class="stat"><div class="num">5</div><div class="label">Küme</div></div>
+    <div class="stat"><div class="num">24K+</div><div class="label">Satır Kod</div></div>
+    <div class="stat"><div class="num">630+</div><div class="label">Test</div></div>
+    <div class="stat"><div class="num">8</div><div class="label">Aktif Modül</div></div>
+  </div>
+</section>
+
+<!-- ─── Architecture ─── -->
+<section id="mimari" style="background:var(--bg2)">
+  <div class="container">
+    <span class="section-label">Mimari</span>
+    <h2 class="section-title">Biyolojik Evrim Modeli</h2>
+    <p class="section-desc">Sistemin gelişimi, bir organizmanın evrimsel inşasını taklit eder. Her faz bir öncekinin çıktısına bağımlıdır.</p>
+
+    <div class="arch">
+      <div class="arch-phase ulak" onclick="filterByFaz(1)">
+        <div class="phase-num">Faz 1</div>
+        <div class="phase-name">ULAK</div>
+        <div class="phase-bio">Sinir Sistemi</div>
+        <div class="phase-count">12 Modül</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-phase gorgu" onclick="filterByFaz(2)">
+        <div class="phase-num">Faz 2</div>
+        <div class="phase-name">GÖRGÜ</div>
+        <div class="phase-bio">Duyu Organları</div>
+        <div class="phase-count">12 Modül</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-phase buyruk" onclick="filterByFaz(3)">
+        <div class="phase-num">Faz 3</div>
+        <div class="phase-name">BUYRUK</div>
+        <div class="phase-bio">Beyin ve Biliş</div>
+        <div class="phase-count">12 Modül</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-phase kovan" onclick="filterByFaz(4)">
+        <div class="phase-num">Faz 4</div>
+        <div class="phase-name">KOVAN</div>
+        <div class="phase-bio">Kas ve Uzuvlar</div>
+        <div class="phase-count">12 Modül</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-phase kin" onclick="filterByFaz(5)">
+        <div class="phase-num">Faz 5</div>
+        <div class="phase-name">KIN</div>
+        <div class="phase-bio">Bağışıklık</div>
+        <div class="phase-count">12 Modül</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 60 Modules ─── -->
+<section id="moduller">
+  <div class="container">
+    <span class="section-label">Modüller</span>
+    <h2 class="section-title">60 Otonom Modül</h2>
+    <p class="section-desc">Her biri bağımsız çalışabilen, konteynerize mikroservis olarak tasarlanmış dijital savaş bileşenleri.</p>
+
+    <div class="filters">
+      <button class="active" onclick="filterModules('all',this)">Tümü (60)</button>
+      <button onclick="filterModules('1',this)" style="border-color:rgba(56,189,248,.3)">⚡ ULAK (12)</button>
+      <button onclick="filterModules('2',this)" style="border-color:rgba(52,211,153,.3)">👁 GÖRGÜ (12)</button>
+      <button onclick="filterModules('3',this)" style="border-color:rgba(251,191,36,.3)">🧠 BUYRUK (12)</button>
+      <button onclick="filterModules('4',this)" style="border-color:rgba(248,113,113,.3)">🦾 KOVAN (12)</button>
+      <button onclick="filterModules('5',this)" style="border-color:rgba(167,139,250,.3)">🛡 KIN (12)</button>
+    </div>
+
+    <div class="modules" id="moduleGrid"></div>
+  </div>
+</section>
+
+<!-- ─── Phases Timeline ─── -->
+<section id="fazlar" style="background:var(--bg2)">
+  <div class="container">
+    <span class="section-label">Geliştirme Takvimi</span>
+    <h2 class="section-title">Faz Yol Haritası</h2>
+    <p class="section-desc">Stratejik fazlandırma sayesinde yazılım ekipleri blokaj yaşamadan ilerler.</p>
+
+    <div class="timeline">
+      <div class="tl-item active" data-faz="1">
+        <div class="tl-dot"></div>
+        <div class="tl-phase" style="color:var(--ulak)">Faz 1 — Aktif</div>
+        <div class="tl-title">ULAK Kümesi — Sinir Sistemi</div>
+        <div class="tl-desc">Modüller arası iletişim, veritabanı, orkestrasyon ve altyapı ağı. 8/12 modül tamamlandı. Mikroservis orkestrasyonu, mesaj kuyruğu, durum veritabanı, sağlık izleme, FFI köprüsü, trafik yönlendirme, uç bilişim ve taktiksel arayüz aktif.</div>
+      </div>
+      <div class="tl-item" data-faz="2">
+        <div class="tl-dot"></div>
+        <div class="tl-phase" style="color:var(--gorgu)">Faz 2</div>
+        <div class="tl-title">GÖRGÜ Kümesi — Duyu Organları</div>
+        <div class="tl-desc">Görüntü, ses, sinyal ve OSINT verilerini toplayan sensör işleme algoritmaları. YOLO nesne tespiti, termal analiz, kamuflaj kırma, akustik konumlandırma, uydu değişim tespiti ve sensör füzyonu.</div>
+      </div>
+      <div class="tl-item" data-faz="3">
+        <div class="tl-dot"></div>
+        <div class="tl-phase" style="color:var(--buyruk)">Faz 3</div>
+        <div class="tl-title">BUYRUK Kümesi — Beyin ve Biliş</div>
+        <div class="tl-desc">Ham verinin yapay zeka ile anlamlandırılması, stratejik karar alma, etik çerçeve ve kaynak optimizasyonu. Oyun teorisi, AHP, Bayezyen ağlar ve LLM tabanlı komut çevirici.</div>
+      </div>
+      <div class="tl-item" data-faz="4">
+        <div class="tl-dot"></div>
+        <div class="tl-phase" style="color:var(--kovan)">Faz 4</div>
+        <div class="tl-title">KOVAN Kümesi — Kas ve Uzuvlar</div>
+        <div class="tl-desc">Otonom navigasyon, sürü uçuşu, formasyon değiştirme, balistik hesaplama ve 3D rota çizimi. İnsansız hava ve kara araçlarının eşgüdümlü hareket algoritmaları.</div>
+      </div>
+      <div class="tl-item" data-faz="5">
+        <div class="tl-dot"></div>
+        <div class="tl-phase" style="color:var(--kin)">Faz 5</div>
+        <div class="tl-title">KIN Kümesi — Bağışıklık Sistemi</div>
+        <div class="tl-desc">Siber savunma, elektronik harp, kuantum sonrası şifreleme, GPS spoofing tespiti ve stealth algoritmalar. Sistemin görünmez kalkanı.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Tech Stack ─── -->
+<section id="teknoloji">
+  <div class="container">
+    <span class="section-label">Teknoloji Yığını</span>
+    <h2 class="section-title">Mimari Kararlar</h2>
+    <p class="section-desc">Her teknoloji seçimi, askeri operasyonel gereksinimler doğrultusunda yapılmıştır.</p>
+
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-label">Çekirdek Diller</div>
+        <h4>Go + Python + Rust</h4>
+        <p>Go: düşük gecikme, goroutine eşzamanlılık. Python: AI/ML, hızlı prototipleme. Rust: bellek güvenli kriptografi.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-label">Veritabanı</div>
+        <h4>64-Shard Bellek İçi KV Store</h4>
+        <p>RAFT konsensüs, WAL + CRC32, TTL, Watch, sub-µs GET latency (~105ns). Namespace bazlı izolasyon.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-label">Mesajlaşma</div>
+        <h4>Kafka-benzeri Event Broker</h4>
+        <p>Lock-free RingBuffer, Min-Heap PriorityQueue, gRPC + HTTP. Askeri QoS: 1=kritik, 10=düşük.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-label">Güvenlik</div>
+        <h4>Zero Trust Architecture</h4>
+        <p>Sıfır Güven, rate limiting, mikro-segmentasyon, PKI, kuantum dirençli şifreleme (ML-KEM/Kyber).</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-label">Orkestrasyon</div>
+        <h4>Konteyner Tabanlı Dağıtık Sistem</h4>
+        <p>Docker Compose, multi-stage build, health check, graceful shutdown, ortam bazlı konfigürasyon.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-label">Format & Protokol</div>
+        <h4>JSON / MessagePack / CBOR / gRPC</h4>
+        <p>Sıfır dış bağımlılıklı saf Go codec motoru. Round-trip güvenli, şema versiyonlama ve uyumluluk kontrolü.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Footer ─── -->
+<footer>
+  <p class="motto-footer">„Görünmeyeni gör, duyulmayanı duy, emredileni yap."</p>
+  <p>ÖTÜKEN-MATRİS — Yeni Nesil Donanımsız Savunma Yazılım Platformu</p>
+</footer>
+
+<script>
+// ─── Module Data (60 modules) ───
+const modules = [
+  // ═══ FAZ 1: ULAK ═══
+  {faz:1,kume:"ULAK",ad:"BÜTÜN",baslik:"Ana Çatı Sistemi",ikon:"🏛",
+   aciklama:"Tüm modülleri birleştiren mikroservis mimarisinin ana kapsayıcısı. API Gateway, Service Mesh, Circuit Breaker, Auto Scaler ve orkestrasyon motoru. Kubernetes benzeri konteyner orkestrasyonu ile yatay ve dikey ölçekleme.",
+   tekno:["Python","FastAPI","Service Mesh","Circuit Breaker"],done:true},
+  {faz:1,kume:"ULAK",ad:"BAĞ",baslik:"Veri Transfer Katmanı",ikon:"📡",
+   aciklama:"Kafka benzeri yüksek performanslı mesaj broker. Lock-free RingBuffer, Min-Heap PriorityQueue ile askeri QoS destekli asenkron iletişim. gRPC + HTTP, exponential backoff retry, güvenilir teslimat.",
+   tekno:["Go","gRPC","Kafka-benzeri","Lock-free"],done:true},
+  {faz:1,kume:"ULAK",ad:"KÜTÜK",baslik:"Anlık Durum Veritabanı",ikon:"🗄",
+   aciklama:"64-shard dağıtık bellek içi KV store. RAFT konsensüs, WAL (CRC32+segment rotation), TTL, Watch, namespace izolasyonu. GET ~105ns, PUT ~484ns latency.",
+   tekno:["Go","RAFT","WAL","FNV-32a"],done:true},
+  {faz:1,kume:"ULAK",ad:"DİRLİK",baslik:"Sistem Sağlık Taraması",ikon:"🏥",
+   aciklama:"Tüm servislerin CPU, RAM, disk I/O ve ağ gecikme değerlerini izleyen telemetri yazılımı. 3-sigma anomali tespiti, HTTP/TCP/gRPC probe, sliding window analiz, otomatik alarm ve restart tetikleme.",
+   tekno:["Go","Anomaly Detection","Probe","Alerter"],done:true},
+  {faz:1,kume:"ULAK",ad:"BAĞDAŞ",baslik:"Polyglot FFI Köprüsü",ikon:"🔗",
+   aciklama:"Go, Python, Rust ve C++ bileşenlerini kayıpsız birbirine bağlayan Foreign Function Interface modülü. JSON/MessagePack/CBOR codec motoru, şema versiyonlama, pipeline engine ve adaptör katmanı.",
+   tekno:["Go","JSON","MsgPack","CBOR","Schema Registry"],done:true},
+  {faz:1,kume:"ULAK",ad:"AKIM",baslik:"Trafik Yönlendirme",ikon:"🌊",
+   aciklama:"Ağ üzerindeki veri trafiğini tıkanıklık durumuna göre dinamik yönlendiren QoS motoru. Dijkstra + tıkanıklık-farkında maliyet fonksiyonu, K-en-kısa-yol, 5 strateji yük dengeleyici, 6 QoS sınıfı.",
+   tekno:["Go","Dijkstra","QoS","Load Balancer"],done:true},
+  {faz:1,kume:"ULAK",ad:"YURT",baslik:"Uç Bilişim ve Yerel Depolama",ikon:"🏕",
+   aciklama:"İletişim koptuğunda çalışmayı sürdüren edge computing mimarisi. VectorClock, 4 çatışma çözüm politikası (LWW/CloudWins/EdgeWins/MergeAll), offline proxy tamponu, split-brain tespiti.",
+   tekno:["Go","VectorClock","Edge","Conflict Resolution"],done:true},
+  {faz:1,kume:"ULAK",ad:"YÜZEY",baslik:"3D Taktiksel Arayüz",ikon:"🗺",
+   aciklama:"Komutanlara sahadaki durumu gerçek zamanlı sunan taktiksel izleme ekranı. SSE ile canlı push, 8 katmanlı harita yönetimi, web dashboard, 7 modül yoklama, 5000+ varlık takibi.",
+   tekno:["Go","SSE","Canvas","Real-time"],done:true},
+  {faz:1,kume:"ULAK",ad:"İM",baslik:"Dijital İmza ve Kimlik",ikon:"🔏",
+   aciklama:"Zero Trust mimarisinin kalbindeki kimlik doğrulama modülü. Asimetrik kriptografi, PKI altyapısı, rotating token şifrelemeler. Her birimin MATRİS ağına katılırken kendini doğrulaması.",
+   tekno:["Rust","PKI","JWT","Asimetrik Kripto"],done:false},
+  {faz:1,kume:"ULAK",ad:"YAYIN",baslik:"Şifreli Veri Yayımı",ikon:"📻",
+   aciklama:"Hassas emirlerin sahadaki platformlara aktarılması protokolü. Kayıpsız sıkıştırma, uçtan uca şifreleme, FEC (Forward Error Correction) ile paket kayıp düzeltme.",
+   tekno:["Go","FEC","E2E Encryption","Compression"],done:false},
+  {faz:1,kume:"ULAK",ad:"DURAK",baslik:"QoS Paket Önceliklendirme",ikon:"⏸",
+   aciklama:"Kısıtlı bant genişliğinde veri paketlerinin aciliyet sırasına göre yönetimi. Hedef vurma onayı veya saldırı alarmı gibi hayati veriler en yüksek önceliğe atanır.",
+   tekno:["Go","Priority Queue","QoS","Traffic Shaping"],done:false},
+  {faz:1,kume:"ULAK",ad:"TUTUM",baslik:"Batarya & Kaynak İzleyici",ikon:"🔋",
+   aciklama:"Sahadaki elektrikli platformların enerji durumunu izler. Lineer regresyon ve yapay sinir ağlarıyla tüketim tahmini, otomatik geri dönüş rotası ve görev devri uyarıları.",
+   tekno:["Python","Regression","ANN","Energy Mgmt"],done:false},
+
+  // ═══ FAZ 2: GÖRGÜ ═══
+  {faz:2,kume:"GÖRGÜ",ad:"TANI",baslik:"Nesne Tespit ve Sınıflandırma",ikon:"🎯",
+   aciklama:"YOLO serisi algoritmalarla yüksek performanslı nesne tespiti. Dost, düşman ve sivil unsurları ayırt eden çok katmanlı CNN. Koordinat ve hız vektörüyle KÜTÜK'e kayıt.",
+   tekno:["Python","YOLO","CNN","OpenCV"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"KÖZ",baslik:"Termal İz Analizi",ikon:"🌡",
+   aciklama:"Kızılötesi sensörlerden alınan termal görüntüleri işler. Motor ısınma periyotları, aerodinamik sürtünme, gizli jeneratör imzalarını termoreflektans algoritmalarıyla analiz eder.",
+   tekno:["Python","IR Processing","TAITherm","Thermal"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"SEZİ",baslik:"Kamuflaj Kırma",ikon:"🔍",
+   aciklama:"Gabor dalgacıkları ve Darg operatörüyle hedef-arkaplan doku uyumsuzluğunu analiz eder. 3D konveks/konkav objelerin istatistiksel varyans modelleriyle gizli hedefleri ifşa eder.",
+   tekno:["Python","Gabor Wavelets","Texture Analysis"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"YANKI",baslik:"Akustik Konumlandırma",ikon:"🔊",
+   aciklama:"Mikrofon dizilimlerinden çapraz korelasyon ve eşleştirilmiş filtre ile silah atışı kaynağını bulur. Şok dalgası ve namlu patlaması TOA üçgenlemesiyle 3D koordinat hesabı.",
+   tekno:["Python","DSP","Cross-Correlation","Triangulation"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"DUYUM",baslik:"Açık Kaynak İstihbarat",ikon:"🌐",
+   aciklama:"Sosyal medya, haber siteleri, uydu görüntüleri üzerinden NLP ve LLM ile semantik veri madenciliği. Askeri yığınak söylentilerini eyleme dönüştürülebilir istihbarata çevirir.",
+   tekno:["Python","NLP","LLM","OSINT","Web Scraping"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"BAŞKALA",baslik:"Uydu Değişim Tespiti",ikon:"🛰",
+   aciklama:"Optik ve SAR uydu fotoğraflarında zaman serisi analizi. TransUNet++ ve REACTIV modelleriyle siper kazımı, bina yıkımı, araç hareketi gibi değişimleri otonom olarak saptar.",
+   tekno:["Python","TransUNet++","SAR","Change Detection"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"SÖZGEÇ",baslik:"Karmaşık Sinyal Ayıklama",ikon:"📶",
+   aciklama:"Elektronik harp ortamındaki sinyal karmaşasından dost frekansları ayrıştıran DSP modülü. FFT ve dalgacık dönüşümleriyle frekans bantlarına ayırma ve temizleme.",
+   tekno:["Python","FFT","Wavelet","DSP","SDR"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"İZLEK",baslik:"Rota Tahmini",ikon:"📐",
+   aciklama:"Hareket halindeki hedefin gelecek konumunu tahmin eden kinematik analiz. Gelişmiş Kalman filtreleri ve Markov zincirleriyle ivme analizi, önleme atışı koordinat hesabı.",
+   tekno:["Python","Kalman Filter","Markov Chain"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"KATMAN",baslik:"Sensör Füzyonu",ikon:"🔀",
+   aciklama:"Kamera, radar ve Lidar verilerini aynı koordinat uzayında birleştiren füzyon motoru. EKF yerine Faktör Grafikleri ve çok modlu füzyon ile gecikmesiz dijital durum.",
+   tekno:["Python","Factor Graphs","EKF","Multi-modal"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"AYDIN",baslik:"Gece Görüş Netleştirme",ikon:"🌙",
+   aciklama:"Düşük ışıklı görüntülerin yazılımsal iyileştirilmesi. Denoising Diffusion Modelleri ve Retinex ayrıştırma ile gürültü temizleme, renk düzeltme ve karanlık bölge aydınlatma.",
+   tekno:["Python","Diffusion Models","Retinex","Denoising"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"GÖLGE",baslik:"Optik Parlama Tespiti",ikon:"✨",
+   aciklama:"Kamufle edilmiş keskin nişancı dürbünlerinden yansıyan optik parlamaları tespit eder. Cam kırığı ile dürbün foton yansıması arasındaki spektral farkları ayrıştırır.",
+   tekno:["Python","Spectral Analysis","Glint Detection"],done:false},
+  {faz:2,kume:"GÖRGÜ",ad:"UFKUN",baslik:"Uzak Mesafe Siluet Analizi",ikon:"🏔",
+   aciklama:"Piksellerin silikleştiği uzak mesafelerde K-means kümeleme ve siluet skorlama ile hedef cins tespiti. Birkaç piksellik kümeden kaya, araç veya insan profili ayrımı.",
+   tekno:["Python","K-Means","Silhouette Score","ML"],done:false},
+
+  // ═══ FAZ 3: BUYRUK ═══
+  {faz:3,kume:"BUYRUK",ad:"TÖRE",baslik:"Önceliklendirme Algoritması",ikon:"⚖",
+   aciklama:"Yüzlerce hedef arasında imha sırasını belirleyen hiyerarşik değerlendirme. AHP ve çok nitelikli fayda teorisi ile mesafe, hasar potansiyeli ve stratejik önem parametreleri üzerinden sıralama.",
+   tekno:["Python","AHP","MAUT","Decision Theory"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"TAYİN",baslik:"Lojistik Optimizasyonu",ikon:"📦",
+   aciklama:"Mühimmat ve yakıt tedarik zinciri yönetimi. Prediktif bakım, ML destekli risk modeli, boş bacak maliyet optimizasyonu ile birliklere en hızlı ikmal.",
+   tekno:["Python","ML","Supply Chain","Optimization"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"ÖNGÖRÜ",baslik:"Oyun Teorisi Motoru",ikon:"♟",
+   aciklama:"Düşmanın sonraki hamlesini tahmin eden analitik satranç motoru. Sıfır Toplamlı Oyunlar, Minimax, Nim-sum, Nash Dengesi hesaplamaları ve karar ağaçları.",
+   tekno:["Python","Minimax","Nash","Game Theory"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"VİCDAN",baslik:"Etik Atış Onay Mekanizması",ikon:"🕊",
+   aciklama:"Otonom silah kullanımında Çifte Etki Doktrini ve Cenevre Sözleşmesi kurallarını algoritmik çerçeveye oturtan etik modül. Sivil zayiat riski yüksekse ateşlemeyi bloke eder.",
+   tekno:["Python","Ethics AI","Human-in-the-Loop"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"DİLMAÇ",baslik:"Doğal Dil → Komut Çevirici",ikon:"🗣",
+   aciklama:"Komutanın sesli veya metin emirlerini otonom sistemlerin anlayacağı koordinat, rota ve eylem komutlarına dönüştüren LLM tabanlı semantik çevirici.",
+   tekno:["Python","LLM","NLP","Speech-to-Text"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"BİLGE",baslik:"Geçmişten Öğrenme",ikon:"📚",
+   aciklama:"Derin Pekiştirmeli Öğrenme ile kümülatif tecrübe biriktiren modül. Her operasyonun başarı/başarısızlığını ödül-ceza mekanizmasıyla kaydeder, hiper-parametre güncellemeleri yapar.",
+   tekno:["Python","Deep RL","Experience Replay"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"YARGI",baslik:"Hedef Kimlik Son Karar",ikon:"🎖",
+   aciklama:"Optik, termal, akustik verilerini birleştirerek dost/düşman/sivil kararı veren modül. Olasılıklı Bilgi Grafikleri ve Graf Sinir Ağları ile yüzdelik kimlik teşhisi.",
+   tekno:["Python","GNN","Knowledge Graphs","Fusion"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"DÜZEN",baslik:"Dağıtık Birlik Yönetimi",ikon:"🗂",
+   aciklama:"Kopuk durumdaki hava, kara ve deniz araçlarını tek ekrandan koordine eder. RAFT konsensüs ile iletişim kopsa bile lider düğüm komutayı devralır.",
+   tekno:["Go","RAFT","Distributed Consensus"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"AKIL",baslik:"Kaynak Dağıtım Optimizasyonu",ikon:"🧮",
+   aciklama:"Kısıtlı silah ve mühimmatı hedeflere matematiksel olarak paylaştıran modül. Doğrusal Programlama ve Hedef Tahsis Problemi çözücü denklemler.",
+   tekno:["Python","Linear Programming","Target Allocation"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"SORGUN",baslik:"Veri Tutarsızlık Denetçisi",ikon:"🔎",
+   aciklama:"Sahadan akan verideki çelişkileri (aynı plaka, imkansız konum) tespit eden modül. Olasılıklı varlık bağlama ile sahte/hatalı sensörleri izole eder.",
+   tekno:["Python","Entity Linkage","Anomaly Detection"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"YAZIT",baslik:"Blockchain Savaş Kaydı",ikon:"⛓",
+   aciklama:"Her otonom kararı, ateşleme emrini ve sensör logunu Blockchain ile şifreleyen değişmez kayıt sistemi. Yetkisiz silme/değiştirmeye karşı tam immutable loglama.",
+   tekno:["Rust","Blockchain","DLT","Immutable Log"],done:false},
+  {faz:3,kume:"BUYRUK",ad:"KESİN",baslik:"İhtimal Analizörü",ikon:"📊",
+   aciklama:"Saldırı senaryolarının başarı ihtimallerini Bayezyen ağlar üzerinden analiz eder. Her varyasyonun zayiat, süre ve başarı ihtimalini yüzdesel istatistiklere döker.",
+   tekno:["Python","Bayesian Networks","Monte Carlo"],done:false},
+
+  // ═══ FAZ 4: KOVAN ═══
+  {faz:4,kume:"KOVAN",ad:"SAĞANAK",baslik:"Sürü Uçuş Algoritması",ikon:"🐝",
+   aciklama:"Merkezi lider olmadan dronların birlikte hareket ettiği swarm algoritması. Yapay Potansiyel Alanlar ve DQN-SISA ile çarpışmasız görev bölüşümü ve eşgüdümlü uçuş.",
+   tekno:["Python","Swarm","DQN","Potential Fields"],done:false},
+  {faz:4,kume:"KOVAN",ad:"YERLEM",baslik:"GPS-Denied Navigasyon",ikon:"📍",
+   aciklama:"GPS kesintisinde Visual SLAM ile navigasyon. Monoküler/RGB-D kameralardan çevrenin haritasını çıkarır ve aracın mutlak pozisyonunu hesaplar.",
+   tekno:["Python","V-SLAM","ORB","Point Cloud"],done:false},
+  {faz:4,kume:"KOVAN",ad:"ONAR",baslik:"Otomatik Görev Devri",ikon:"🔄",
+   aciklama:"Vurulmuş aracın yükünü sağ kalan birimlere devreden dinamik optimizasyon. UVDAR benzeri ultraviyole LED iletişimle radyo sessizliğinde bile görev aktarımı.",
+   tekno:["Python","UVDAR","Task Reallocation","Swarm"],done:false},
+  {faz:4,kume:"KOVAN",ad:"EVRİM",baslik:"Adaptif Formasyon Değişimi",ikon:"🔁",
+   aciklama:"Görev sırasında şartlara göre sürü dizilimini değiştiren adaptif kontrol. Dar vadi, şehir sokağı veya hava savunma tehdidine göre V formasyonu veya tek sıra geçiş.",
+   tekno:["Python","Formation Control","Adaptive"],done:false},
+  {faz:4,kume:"KOVAN",ad:"SAPMA",baslik:"Balistik Hesaplayıcı",ikon:"🎯",
+   aciklama:"Rüzgar, nem, basınç, Coriolis kuvveti gibi çevresel değişkenleri hesaba katan balistik modül. Doğrusal olmayan diferansiyel denklemlerle hedefleme ofseti hesabı.",
+   tekno:["Python","Ballistics","ODE Solver","Physics"],done:false},
+  {faz:4,kume:"KOVAN",ad:"KOŞUT",baslik:"Kara-Hava Eşgüdümü",ikon:"🤝",
+   aciklama:"İnsansız kara araçlarının havadaki dronlarla Marsupial robotik mantığında senkronize ilerlemesi. DDPG ile hava keşif verisinin yer aracına kılavuzluk etmesi.",
+   tekno:["Python","DDPG","Marsupial","Air-Ground"],done:false},
+  {faz:4,kume:"KOVAN",ad:"DENGEL",baslik:"Uçuş Stabilizasyonu",ikon:"⚖",
+   aciklama:"Aşırı rüzgar, patlama şok dalgaları karşısında PID kontrol döngülerini milisaniyeler içinde optimize eden denge algoritması. Fizik motoru simülasyonuyla motor tork revizesi.",
+   tekno:["Go","PID Control","Physics Engine"],done:false},
+  {faz:4,kume:"KOVAN",ad:"BİÇİM",baslik:"3D Otomatik Rota Çizimi",ikon:"🧊",
+   aciklama:"Şehir içi 3D ortamlarda Voksel modelleme ve Boustrophedon Hücre Ayrıştırması ile en hızlı güvenli yol hesabı. Çoklu Gezgin Satıcı mantığında çakışmasız rota.",
+   tekno:["Python","Voxel","BCD","MTSP","A*"],done:false},
+  {faz:4,kume:"KOVAN",ad:"SADAK",baslik:"Akıllı Mühimmat Seçimi",ikon:"🏹",
+   aciklama:"Mesafe, hız ve zırh tipini analiz ederek uygun mühimmat cinsi ve sayısını seçen modül. Yumuşak hedefe anti-tank füzesi harcanmasını engelleyen akıllı lojistik.",
+   tekno:["Python","AI Targeting","Smart Logistics"],done:false},
+  {faz:4,kume:"KOVAN",ad:"ÇEVİK",baslik:"Ani Manevra Motoru",ikon:"⚡",
+   aciklama:"Kör noktadan gelen obje veya füzeyi algılayıp edge computing tepkimesiyle saliselerde çarpışma önleyici manevra üreten otonom kaçınma fonksiyonu.",
+   tekno:["Go","Edge Computing","Collision Avoidance"],done:false},
+  {faz:4,kume:"KOVAN",ad:"YÖNEL",baslik:"Manyetik Pusula Düzeltici",ikon:"🧭",
+   aciklama:"Dünya Manyetik Modeli (WMM) ile Hard Iron/Soft Iron etkilerinden kaynaklanan pusula sapmasını hesaplayan modül. Navigasyon rotasını yazılımsal otonom kalibre eder.",
+   tekno:["Go","WMM","Calibration","IMU"],done:false},
+  {faz:4,kume:"KOVAN",ad:"ÖNCÜ",baslik:"Keşif Birimi Navigasyonu",ikon:"🦅",
+   aciklama:"Sürünün önünde giden hafif keşif dronlarına özel navigasyon doktrini. Radyo sessizliğinde nap-of-the-earth süzülme uçuşu ile pasif keşif.",
+   tekno:["Python","Nap-of-Earth","Stealth Nav"],done:false},
+
+  // ═══ FAZ 5: KIN ═══
+  {faz:5,kume:"KIN",ad:"AYIK",baslik:"Jamming Tespit Sistemi",ikon:"📵",
+   aciklama:"GPS/telsiz karıştırmalarını SDR üzerinden ML ile gerçek zamanlı saptayan elektronik savunma. CDMA/Chirp saldırılarını sınıflandırır, beamsteering ile baskılar.",
+   tekno:["Python","SDR","ML","JamShield","Beamsteering"],done:false},
+  {faz:5,kume:"KIN",ad:"ÖZEK",baslik:"Frekans Atlama Çözücü",ikon:"📻",
+   aciklama:"FHSS sinyallerini tarayıp demodüle eden dijital sinyal analiz modülü. GNU Radio ile zaman-frekans kalıplarını işler, atlamalı frekansları tespit eder.",
+   tekno:["Python","SDR","GNU Radio","PLL","FHSS"],done:false},
+  {faz:5,kume:"KIN",ad:"EŞİK",baslik:"Derin Paket Güvenlik Duvarı",ikon:"🧱",
+   aciklama:"Deep Packet Inspection ile ağ trafiğini paket düzeyinde inceler. AI ile normal trafik öğrenir, olağandışı durumda bağlantıyı keser, mikro-segmentasyonu daraltır.",
+   tekno:["Go","DPI","Zero-Trust","AI Firewall"],done:false},
+  {faz:5,kume:"KIN",ad:"SAĞLAM",baslik:"GPS Spoofing Savunması",ikon:"🛡",
+   aciklama:"Sahte GPS sinyallerini taşıyıcı güç, geliş açısı ve Doppler kaymasıyla ayıklayan modül. Gerekirse navigasyonu INS veya V-SLAM'e devreder.",
+   tekno:["Go","GPS","Doppler","INS Fallback"],done:false},
+  {faz:5,kume:"KIN",ad:"MÜHÜR",baslik:"Kuantum Dirençli Şifreleme",ikon:"🔐",
+   aciklama:"NIST ML-KEM (Kyber) ve ML-DSA (Dilithium) ile Post-Quantum kırılmaz veri tünelleri. Rust ve C++ ile yüksek hızlı kuantum sonrası kriptografi.",
+   tekno:["Rust","ML-KEM","Dilithium","PQC","C++"],done:false},
+  {faz:5,kume:"KIN",ad:"SIR",baslik:"Görünmez Haberleşme",ikon:"👻",
+   aciklama:"LPI/LPD konseptine dayalı gizli iletişim. Sinyal gücünü noise floor altına bastırarak düşman ELINT sistemlerine sadece arka plan cızırtısı olarak görünür.",
+   tekno:["Python","LPI/LPD","SPP","Spread Spectrum"],done:false},
+  {faz:5,kume:"KIN",ad:"YALVAÇ",baslik:"Sahte Sinyal Üretimi",ikon:"🎭",
+   aciklama:"Sahte eko, Doppler ve GPS verileri üreterek düşman radarını yanıltan aktif yanıltma modülü. Tek dron sinyalini koca bir filo gibi gösterir.",
+   tekno:["Python","Spoofing","EW","Radar Deception"],done:false},
+  {faz:5,kume:"KIN",ad:"KIRIM",baslik:"Siber Taarruz Ajanları",ikon:"💀",
+   aciklama:"Düşman C2 ağlarına otonom sızan LLM entegre siber saldırı ajanları. ALOHA sistemi gibi CVE tarayarak penetrasyon operasyonlarını saniyelere indirir.",
+   tekno:["Python","LLM","Agentic AI","Pentest"],done:false},
+  {faz:5,kume:"KIN",ad:"KORAY",baslik:"Yazılımsal RCS Küçültme",ikon:"✈",
+   aciklama:"Radar Kesit Alanını RL-GO/Feko ile anlık hesaplayıp aracı en az yansıma yapacak açıya konumlandıran yazılımsal stealth kalkan.",
+   tekno:["Python","RL-GO","Feko","RCS","EM Sim"],done:false},
+  {faz:5,kume:"KIN",ad:"ÖRTÜ",baslik:"Sistem İzi Gizleme",ikon:"🫥",
+   aciklama:"Komuta merkezi IP, MAC ve spektrum yayım karakteristiklerini algoritmik rotasyonla sürekli değiştirip maskeleyerek fiziksel ve siber tespiti engeller.",
+   tekno:["Go","MAC Rotation","IP Masking","OPSEC"],done:false},
+  {faz:5,kume:"KIN",ad:"GEÇİT",baslik:"Güvenli Veri Tünelleme",ikon:"🚇",
+   aciklama:"Her veri paketi için anlık ayrı asimetrik anahtar üreten mikrosaniyelik tünel. Paket hedefe ulaşınca tünel kalıcı olarak imha edilir.",
+   tekno:["Rust","Ephemeral Keys","Tunnel","Crypto"],done:false},
+  {faz:5,kume:"KIN",ad:"SİBİ",baslik:"Saldırı Kaynağı İzleme",ikon:"🕵",
+   aciklama:"DDoS, fidye yazılımı gibi saldırıların botnet/proxy zincirini geriye dönük izleyen ağ analizörü. Gerçek saldırganın konumunu ve cihaz ID'sini tespit eder.",
+   tekno:["Python","Traceback","Forensics","IP Analysis"],done:false}
+];
+
+// ─── Render ───
+const grid = document.getElementById('moduleGrid');
+
+function renderModules(filter) {
+  const list = filter === 'all' ? modules : modules.filter(m => m.faz == filter);
+  grid.innerHTML = list.map(m => `
+    <div class="mod-card fade-in" data-faz="${m.faz}" onclick="this.classList.toggle('expanded')">
+      <div class="mod-status ${m.done ? 'done' : 'pending'}"></div>
+      <div class="mod-head">
+        <div class="mod-icon">${m.ikon}</div>
+        <div>
+          <div class="mod-name">${m.ad}</div>
+          <div class="mod-subtitle">${m.baslik}</div>
+        </div>
+        <div class="mod-tag">${m.kume}</div>
+      </div>
+      <div class="mod-desc">${m.aciklama}</div>
+      <div class="mod-techs">${m.tekno.map(t => `<span class="mod-tech">${t}</span>`).join('')}</div>
+    </div>
+  `).join('');
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.fade-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 30);
+    });
+  });
+}
+
+function filterModules(faz, btn) {
+  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderModules(faz);
+}
+
+function filterByFaz(faz) {
+  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+  const buttons = document.querySelectorAll('.filters button');
+  buttons[faz]?.classList.add('active');
+  renderModules(String(faz));
+  document.getElementById('moduller').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─── Intersection Observer ───
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+
+// ─── Nav active state ───
+const sections = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+  const y = window.scrollY + 100;
+  sections.forEach(s => {
+    const link = document.querySelector(`nav a[href="#${s.id}"]`);
+    if (!link) return;
+    if (y >= s.offsetTop && y < s.offsetTop + s.offsetHeight) link.classList.add('active');
+    else link.classList.remove('active');
+  });
+});
+
+// ─── Counter animation ───
+function animateCounters() {
+  document.querySelectorAll('.stat .num').forEach(el => {
+    const text = el.textContent;
+    const match = text.match(/(\d+)/);
+    if (!match) return;
+    const target = parseInt(match[1]);
+    const suffix = text.replace(match[1], '');
+    let current = 0;
+    const step = Math.max(1, Math.floor(target / 40));
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= target) { current = target; clearInterval(timer); }
+      el.textContent = current + suffix;
+    }, 25);
+  });
+}
+
+// ─── Init ───
+renderModules('all');
+animateCounters();
+</script>
+</body>
+</html>

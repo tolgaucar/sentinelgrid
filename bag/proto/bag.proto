@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package bag;
+
+option go_package = "github.com/otukenmatris/bag/proto";
+
+// BAĞ - Veri Transfer Katmanı gRPC Servis Tanımları
+// ÖTÜKEN-MATRİS modüller arası düşük gecikmeli iletişim protokolü
+
+// Sensör verisi - sahadan gelen ham veri paketi
+message SensorData {
+  string sensor_id = 1;
+  string sensor_type = 2;    // "radar", "thermal", "acoustic", "optical", "osint"
+  string source_module = 3;  // Kaynak modül (TANI, KÖZ, SESGEL vb.)
+  bytes  payload = 4;        // Ham veri
+  int64  timestamp_ns = 5;   // Nanosaniye hassasiyetinde zaman damgası
+  int32  priority = 6;       // Öncelik (1=kritik, 10=düşük)
+  map<string, string> metadata = 7;
+}
+
+// Mesaj zarfı - modüller arası iletişim birimi
+message Envelope {
+  string id = 1;
+  string topic = 2;
+  string source = 3;
+  string destination = 4;
+  bytes  payload = 5;
+  int64  timestamp_ns = 6;
+  int32  priority = 7;
+  int32  retry_count = 8;
+  int32  max_retries = 9;
+  string correlation_id = 10;
+  map<string, string> headers = 11;
+}
+
+// ACK - alındı onayı
+message Ack {
+  string message_id = 1;
+  bool   success = 2;
+  string error = 3;
+  int64  processed_at_ns = 4;
+}
+
+// Topic yönetimi
+message Topic {
+  string name = 1;
+  int32  partition_count = 2;
+  int32  replication_factor = 3;
+  int64  retention_ms = 4;
+}
+
+message TopicRequest {
+  string name = 1;
+}
+
+message TopicList {
+  repeated Topic topics = 1;
+}
+
+// Abone olma
+message Subscription {
+  string topic = 1;
+  string consumer_group = 2;
+  string consumer_id = 3;
+  int64  offset = 4; // -1 = en son, 0 = baştan
+}
+
+// Durum sorgulama
+message StatusRequest {}
+
+message StatusResponse {
+  string module = 1;
+  string version = 2;
+  int64  uptime_ms = 3;
+  int64  messages_in = 4;
+  int64  messages_out = 5;
+  int64  messages_failed = 6;
+  int32  active_topics = 7;
+  int32  active_consumers = 8;
+  map<string, int64> topic_depths = 9;
+}
+
+// Toplu mesaj gönderimi
+message BatchEnvelopes {
+  repeated Envelope envelopes = 1;
+}
+
+message BatchAck {
+  repeated Ack acks = 1;
+  int32 success_count = 2;
+  int32 failure_count = 3;
+}
+
+// Sağlık kontrolü
+message HealthRequest {}
+
+message HealthResponse {
+  bool   healthy = 1;
+  string status = 2;
+  int64  latency_ns = 3;
+}
+
+// ──────────────────────────────────────────────
+//  BAĞ Servisleri
+// ──────────────────────────────────────────────
+
+// Ana veri transfer servisi
+service BagTransfer {
+  // Tekil mesaj gönder (fire-and-ack)
+  rpc Send(Envelope) returns (Ack);
+
+  // Toplu mesaj gönder
+  rpc SendBatch(BatchEnvelopes) returns (BatchAck);
+
+  // Sensör verisi akışı (client streaming)
+  rpc StreamSensorData(stream SensorData) returns (Ack);
+
+  // Gerçek zamanlı mesaj akışı (server streaming)
+  rpc Subscribe(Subscription) returns (stream Envelope);
+
+  // Çift yönlü akış (bidirectional streaming)
+  rpc Channel(stream Envelope) returns (stream Envelope);
+}
+
+// Topic yönetim servisi
+service BagTopicManager {
+  rpc CreateTopic(Topic) returns (Ack);
+  rpc DeleteTopic(TopicRequest) returns (Ack);
+  rpc ListTopics(StatusRequest) returns (TopicList);
+  rpc GetTopicDepth(TopicRequest) returns (Ack);
+}
+
+// Sistem durum servisi
+service BagStatus {
+  rpc GetStatus(StatusRequest) returns (StatusResponse);
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
+}
